@@ -48,5 +48,5 @@ To integrate the force (\( F \)) along the reaction coordinate (\( \lambda \)), 
 ## Installation
 Clone the repository:
 ```bash
-git clone https://github.com/<your-username>/<repository-name>.git
-cd <repository-name>
+git clone https://github.com/theodorosP/HER_AU.git
+cd HER_AU

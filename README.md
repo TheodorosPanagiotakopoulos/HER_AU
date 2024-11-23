@@ -45,11 +45,6 @@ To integrate the force (\( F \)) along the reaction coordinate (\( \lambda \)), 
 
 ---
 
-
----
-
----
-
 ## Installation
 Clone the repository:
 ```bash

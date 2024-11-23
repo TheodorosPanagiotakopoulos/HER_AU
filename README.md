@@ -37,13 +37,7 @@ The reaction coordinate is divided into small steps, and the free energy differe
 ### Trapezoidal Rule
 To integrate the force (\( F \)) along the reaction coordinate (\( \lambda \)), we use the trapezoidal rule:
 
-\[
-\Delta G = \int F(\lambda) d\lambda \approx \sum_{i=1}^{N-1} \frac{\Delta \lambda}{2} \left[ F(\lambda_i) + F(\lambda_{i+1}) \right]
-\]
-
-Here:
-- \( \lambda \) represents the reaction coordinate.
-- \( F(\lambda) \) is the force acting along the reaction coordinate.
+ΔG = ∫ F(λ) dλ ≈ Σ (Δλ / 2) * [F(λ_i) + F(λ_i+1)]
 
 ---
 

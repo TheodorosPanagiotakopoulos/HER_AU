@@ -37,10 +37,7 @@ The reaction coordinate is divided into small steps, and the free energy differe
 ### Trapezoidal Rule
 To integrate the force (\( F \)) along the reaction coordinate (\( \lambda \)), we use the trapezoidal rule:
 
-equation:
-  description: >
-    The free energy difference (ΔG) is calculated as the integral of force (F) along the reaction coordinate (λ), approximated using the trapezoidal rule.
-  formula: |
+formula: |
     ΔG = ∫ F(λ) dλ ≈ Σ (Δλ / 2) * [F(λ_i) + F(λ_i+1)]
   variables:
     - ΔG: Free energy difference

@@ -39,6 +39,13 @@ To integrate the force (\( F \)) along the reaction coordinate (\( \lambda \)), 
 
 ΔG = ∫ F(λ) dλ ≈ Σ (Δλ / 2) * [F(λ_i) + F(λ_i+1)]
 
+Where:
+- `λ` represents the reaction coordinate.
+- `F(λ)` is the force acting along the reaction coordinate.
+- `Δλ` is the step size.
+
+---
+
 ---
 
 ## Installation

@@ -1,3 +1,4 @@
+import os
 import gzip
 import glob
 import sys
@@ -41,10 +42,12 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 	if os.path.exists( path_to_SG_calculation ):
 		os.chdir( path_to_SG_calculation )
 		runs = get_RUNs()
-		print( runs )
 		if not runs:
+			print( "No RUN directories" )
 			CC, B_M = get_cc_bm()
+			return [ float( i ) for i in  CC ], [ float( i ) for i in  B_M ]
 		else:
+			print( runs )
 			CC = list()
 			B_M = list()
 			for i in range( 0, len( runs ) ):
@@ -72,7 +75,10 @@ def get_free_energy( path_to_SG_calculation ):
 	return cc, tg
 
 if __name__ == "__main__":
-	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/tutorial_2/"
-	cc, tg = get_free_energy( path )
-	for i in cc:
-		print( i )
+	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/NH4/3_NH4/3_NH4_40_H2O_v1"
+	#df1, df2 = get_cc_bm()
+	collect_cc_and_bm( path )
+	#print( df1 )
+	#cc, tg = get_free_energy( path )
+	#for i in cc:
+	#	print( i )

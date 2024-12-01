@@ -61,9 +61,47 @@ def get_H2O_close_to_NH4_with_distances(system, H2O_close_to_electrode, NH4_mols
 	return results
 
 
+def get_H2O_close_to_NH4_with_distances_v2(system_path, H2O_close_to_electrode, NH4_mols, threshold=2.5):
+	system = read(system_path)
+	results = []
+
+	for h2o in H2O_close_to_electrode:
+		h1_idx, o_idx, h2_idx = h2o
+		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]
+
+		for nh4 in NH4_mols:
+			nh4_positions = system.positions[nh4]
+			distances = cdist(H2O_positions, nh4_positions)
+			min_distance_idx = np.unravel_index(np.argmin(distances), distances.shape)
+			min_distance = distances[min_distance_idx]
+
+			if min_distance < threshold:
+				h2o_atoms = [system.symbols[idx] for idx in [h1_idx, o_idx, h2_idx]]
+				nh4_atoms = [system.symbols[idx] for idx in nh4]
+
+				h2o_atom_idx = min_distance_idx[0]
+				nh4_atom_idx = min_distance_idx[1]
+				h2o_symbol = h2o_atoms[h2o_atom_idx]
+				nh4_symbol = nh4_atoms[nh4_atom_idx]
+				h2o_idx = [h1_idx, o_idx, h2_idx][h2o_atom_idx]
+				nh4_idx = nh4[nh4_atom_idx]
+
+				description = f"symbol {h2o_symbol} = {h2o_idx} - symbol {nh4_symbol} = {nh4_idx}"
+
+				results.append( ( [ h1_idx, o_idx, h2_idx ], nh4, description, round( min_distance, 3 ) ) )
+				break
+	results.sort( key = lambda x: x[ 3 ] )
+	for result in results:
+		print( result )
+
+	return results
+
+
 
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	NH4_mols = get_NH4_mols( "POSCAR" )
 	H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )
-	get_H2O_close_to_NH4_with_distances( "POSCAR", H2O_close, NH4_mols )
+	#get_H2O_close_to_NH4_with_distances( "POSCAR", H2O_close, NH4_mols )
+	#print( "---------" )
+	get_H2O_close_to_NH4_with_distances_v2( "POSCAR", H2O_close, NH4_mols )

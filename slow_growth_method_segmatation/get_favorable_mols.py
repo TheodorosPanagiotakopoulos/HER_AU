@@ -28,6 +28,32 @@ def get_NH4_mols( poscar, threshold = 1.2 ):
 			NH4_mols.append( [ i ] + close_hydrogens )
 	return NH4_mols
 
+
+def get_CH3NH3_mols( poscar, threshold = 1.2 ):
+	system = read( poscar )
+	nitrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "N" ]
+	hydrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "H" ]
+	carbon_indices = [ i for i, j in enumerate(system) if j.symbol == "C" ]
+	print( "nitrogen_indices = ", nitrogen_indices )
+	print( "hydrogen_indices = ", hydrogen_indices )
+	print( "carbon_indices = ", carbon_indices )
+	CH3NH3_mols = list()
+	for i in nitrogen_indices:
+		distances = system.get_distances( i, hydrogen_indices, mic=True )
+		close_hydrogens = [ hydrogen_indices[ i ] for i, j in enumerate( distances ) if j < threshold ]
+		if len( close_hydrogens ) == 3:
+			distances_to_carbon = system.get_distances( i, carbon_indices, mic = True )
+			close_carbon = [ carbon_indices[ i ] for i, j in enumerate( distances_to_carbon ) if j < 1.55 ]
+			print( close_carbon )
+			if len( close_carbon ) == 1:
+				distances_to_hydrogen_from_carbon = system.get_distances(close_carbon[0], hydrogen_indices, mic=True)
+				close_hydrogens_from_carbon = [ hydrogen_indices[ i ] for i, j in enumerate( distances_to_hydrogen_from_carbon ) if j < threshold ]
+				if len( close_hydrogens_from_carbon ) == 3:
+					CH3NH3_mols.append( [ i ] + close_hydrogens + close_carbon + close_hydrogens_from_carbon )
+	#print( "CH3NH3_mols = ", CH3NH3_mols )
+	return CH3NH3_mols
+
+
 def get_closest_H2O_to_surface( poscar, H2O_mols, distance_threshold = 2.6 ):
 	system = read( "POSCAR" )
 	au_indices = [ i for i, j in enumerate( system  ) if j.symbol == "Au" ]
@@ -43,7 +69,7 @@ def get_closest_H2O_to_surface( poscar, H2O_mols, distance_threshold = 2.6 ):
 	#print( H2O_close_to_electrode )
 	return H2O_close_to_electrode
 
-def get_H2O_close_to_NH4_with_distances(system, H2O_close_to_electrode, NH4_mols, threshold=2.5):
+def get_H2O_close_to_NH4_with_distances( system, H2O_close_to_electrode, NH4_mols, threshold = 2.5 ):
 	system = read( "POSCAR" )
 	results = list()
 	for h2o in H2O_close_to_electrode:
@@ -100,8 +126,10 @@ def get_H2O_close_to_NH4_with_distances_v2(system_path, H2O_close_to_electrode, 
 
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
-	NH4_mols = get_NH4_mols( "POSCAR" )
-	H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )
+	CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
+	#NH4_mols = get_NH4_mols( "POSCAR" )
+	#H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )
 	#get_H2O_close_to_NH4_with_distances( "POSCAR", H2O_close, NH4_mols )
 	#print( "---------" )
-	get_H2O_close_to_NH4_with_distances_v2( "POSCAR", H2O_close, NH4_mols )
+	#get_H2O_close_to_NH4_with_distances_v2( "POSCAR", H2O_close, NH4_mols )
+

@@ -30,7 +30,6 @@ def get_NH4_mols( poscar, threshold = 1.2 ):
 	#print( NH4_mols )
 	return NH4_mols
 
-
 def get_CH3NH3_mols( poscar, threshold = 1.2 ):
 	system = read( poscar )
 	nitrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "N" ]
@@ -51,7 +50,6 @@ def get_CH3NH3_mols( poscar, threshold = 1.2 ):
 	#print( "CH3NH3_mols = ", CH3NH3_mols )
 	return CH3NH3_mols
 
-
 def get_closest_H2O_to_surface( poscar, H2O_mols, distance_threshold = 2.6 ):
 	system = read( "POSCAR" )
 	au_indices = [ i for i, j in enumerate( system  ) if j.symbol == "Au" ]
@@ -67,10 +65,9 @@ def get_closest_H2O_to_surface( poscar, H2O_mols, distance_threshold = 2.6 ):
 	#print( H2O_close_to_electrode )
 	return H2O_close_to_electrode
 
-
 def get_H2O_closest_to_electrode( poscar, H2O_close_to_electrode ):
 	system = read( poscar )
-	au_indices = [i for i, atom in enumerate(system) if atom.symbol == "Au"]
+	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[au_indices]
 
 	closest_H2O = None
@@ -90,6 +87,35 @@ def get_H2O_closest_to_electrode( poscar, H2O_close_to_electrode ):
 			au_idx_closest = au_indices[ min_distance_idx[ 1 ] ]
 			closest_H2O = ([h1_idx, o_idx, h2_idx], h2_idx_closest, au_idx_closest, round(min_distance, 3))
 	#print( closest_H2O )
+	return closest_H2O
+
+def get_H2O_attached_to_Na_close_to_Au( poscar, H2O_close_to_electrode, distance_threshold = 2.6 ):
+	system = read( poscar )
+	au_indices = [i for i, atom in enumerate(system) if atom.symbol == "Au"]
+	na_indices = [i for i, atom in enumerate(system) if atom.symbol == "Na"]
+	au_positions = system.positions[au_indices]
+
+	closest_H2O = None
+	min_distance = float('inf')
+
+	for h2o in H2O_close_to_electrode:
+		h1_idx, o_idx, h2_idx = h2o
+		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]
+
+		is_attached_to_Na = any(np.linalg.norm(system.positions[o_idx] - system.positions[na_idx]) < distance_threshold for na_idx in na_indices)
+		if not is_attached_to_Na:
+			continue
+
+		distances = cdist(H2O_positions, au_positions)
+		min_distance_idx = np.unravel_index(np.argmin(distances), distances.shape)
+		distance = distances[min_distance_idx]
+
+		if distance < min_distance:
+			min_distance = distance
+			h2_idx_closest = [h1_idx, o_idx, h2_idx][min_distance_idx[0]]
+			au_idx_closest = au_indices[min_distance_idx[1]]
+			closest_H2O = ([h1_idx, o_idx, h2_idx], h2_idx_closest, au_idx_closest, round(min_distance, 3))
+	print( closest_H2O )
 	return closest_H2O
 
 def get_H2O_close_to_NH4( system_path, H2O_close_to_electrode, NH4_mols, threshold=2.5 ):
@@ -161,11 +187,11 @@ if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
 	H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )
-	closest = get_H2O_closest_to_electrode( "POSCAR", H2O_close )	
+	closest = get_H2O_attached_to_Na_close_to_Au( "POSCAR", H2O_close )
+	#closest = get_H2O_closest_to_electrode( "POSCAR", H2O_close )	
 	#CH3NH3_close_to_H2O = get_H2O_close_to_CH3NH3( "POSCAR", H2O_close, CH3NH3_mols )
 	#NH4_mols = get_NH4_mols( "POSCAR" )
 	#H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )
 	#get_H2O_close_to_NH4_with_distances( "POSCAR", H2O_close, NH4_mols )
 	#print( "---------" )
 	#get_H2O_close_to_NH4_with_distances_v2( "POSCAR", H2O_close, NH4_mols )
-

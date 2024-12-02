@@ -127,6 +127,32 @@ def get_H2O_attached_to_Na_close_to_Au( poscar, H2O_close_to_electrode, distance
 	print( closest_H2O )
 	return closest_H2O
 
+def get_NH4_closest_to_electrode( poscar, NH4_close_to_electrode ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+
+	au_positions = system.positions[ au_indices ]
+	closest_NH4 = None
+	min_distance = float( "inf" )
+
+	for nh4 in NH4_close_to_electrode:
+		n_idx, h1_idx, h2_idx, h3_idx, h4_idx = nh4
+		NH4_positions = system.positions[ [n_idx, h1_idx, h2_idx, h3_idx, h4_idx] ]
+
+		H_positions = NH4_positions[ 1: ]
+		distances = cdist( H_positions, au_positions )
+		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )
+		distance = distances[ min_distance_idx ]
+	
+		if distance < min_distance:
+			min_distance = distance
+			closest_h_idx = [ h1_idx, h2_idx, h3_idx, h4_idx ][ min_distance_idx[ 0 ] ]
+			au_idx_closest = au_indices[ min_distance_idx[ 1 ] ]
+			closest_NH4 = ( [ n_idx, h1_idx, h2_idx, h3_idx, h4_idx ], closest_h_idx, au_idx_closest, round(min_distance, 3) )
+
+	print( closest_NH4 )
+	return closest_NH4
+
 def get_H2O_close_to_NH4( system_path, H2O_close_to_electrode, NH4_mols, threshold=2.5 ):
 	system = read( system_path )
 	results = []
@@ -194,10 +220,12 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
+	NH4_mols = get_NH4_mols( "POSCAR" )
 	CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
 	H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )
-	#closest = get_H2O_closest_to_electrode( "POSCAR", H2O_close )	
-	closest = get_H2O_attached_to_Na_close_to_Au( "POSCAR", H2O_close )
+	#closest = get_H2O_closest_to_electrode( "POSCAR", H2O_close )
+	closest = get_NH4_closest_to_electrode( "POSCAR", NH4_mols )	
+	#closest = get_H2O_attached_to_Na_close_to_Au( "POSCAR", H2O_close )
 	#CH3NH3_close_to_H2O = get_H2O_close_to_CH3NH3( "POSCAR", H2O_close, CH3NH3_mols )
 	#NH4_mols = get_NH4_mols( "POSCAR" )
 	#H2O_close = get_closest_H2O_to_surface( "POSCAR", H2O_mols )

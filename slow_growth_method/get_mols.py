@@ -153,8 +153,8 @@ def get_NH4_closest_to_electrode( poscar, NH4_mols ):
 	#print( closest_NH4 )
 	return closest_NH4
 
-def get_H2O_close_to_NH4( system_path, H2O_close_to_electrode, NH4_mols, threshold=2.5 ):
-	system = read( system_path )
+def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold=2.5 ):
+	system = read( poscar )
 	results = []
 
 	for h2o in H2O_close_to_electrode:
@@ -185,6 +185,30 @@ def get_H2O_close_to_NH4( system_path, H2O_close_to_electrode, NH4_mols, thresho
 	results.sort( key = lambda x: x[ 3 ] )
 	#print( results )
 	return results
+
+def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, threshold = 5.5 ):
+	system = read( poscar )
+	results = list()
+
+	for h2o in H2O_close_to_electrode:
+		h1_idx, o_idx, h2_idx = h2o
+		O_position = system.positions[ o_idx ]
+
+		for nh4 in NH4_mols:
+			NH4_positions = system.positions[ nh4 ]
+			distances = cdist( [ O_position], NH4_positions )
+			min_distance_idx = np.unravel_index(np.argmin( distances ), distances.shape )
+			min_distance = distances[ min_distance_idx ]
+
+			if min_distance < threshold:
+				closest_h_idx = nh4[ min_distance_idx[ 1 ] ]
+				results.append( (h2o, nh4, o_idx, closest_h_idx, round(min_distance, 3 ) ) )
+				break
+
+	results.sort( key = lambda x: x[ 4 ] )
+	print( results )
+	return results
+
 
 def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols ):
 	system = read( poscar )
@@ -244,7 +268,9 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
-	closest_H2O = get_closest_H2O_to_electrode( "POSCAR", H2O_close )	
+	NH4_mols = get_NH4_mols( "POSCAR" )
+	H2O_close_to_surface_and_NH4 = get_H2O_close_to_surface_and_NH4( "POSCAR", H2O_close, NH4_mols )
+	#closest_H2O = get_closest_H2O_to_electrode( "POSCAR", H2O_close )	
 	#CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
 	#CH3NH3_close  = get_CH3NH3_closest_to_electrode( "POSCAR", CH3NH3_mols )
 	#get_H2O_close_to_CH3NH3( "POSCAR", H2O_close, CH3NH3_mols )

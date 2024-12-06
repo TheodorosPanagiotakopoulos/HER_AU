@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 def plot_barrier( list_x, list_y ):
 	state_l = 0.9
 	state_h = 3

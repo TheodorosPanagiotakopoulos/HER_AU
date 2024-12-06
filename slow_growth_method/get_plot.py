@@ -1,6 +1,11 @@
+import os
 import matplotlib.pyplot as plt
 
 def plot_barrier( list_x, list_y ):
+	
+	diff = round( max( list_y ) - min( list_y ), 2 )
+	max_index = list_y.index( max( list_y ) )
+
 	state_l = 0.9
 	state_h = 3
 
@@ -15,25 +20,28 @@ def plot_barrier( list_x, list_y ):
 
 	fig = plt.figure(figsize=(plt_w,plt_h))
 	ax2 = fig.add_subplot(1, 1, 1 )
-	ax2.plot( list_x, list_y, "o", markersize = 4)
+	ax2.plot( list_x, list_y, "o", markersize = 2)
 
-	xmax = -0.155
-	xmin = -0.195
-	ax2.set_xlabel(r'Na-H distance ($\mathrm{\AA}$)', fontsize = 12, labelpad = 0.5)
+	xmin = min( list_x )
+	xmax = max( list_x )
+
+	ax2.set_xlabel(r'O-H distance ($\mathrm{\AA}$)', fontsize = 12, labelpad = 0.5)
 	ax2.set_ylabel( 'Relative free energy (eV)', fontsize = 12, labelpad = 2 )
-	ymin = -0.026
-	ymax = 0.16
+	ymin = -0.1
+	ymax = 1.1
+	plt.vlines( x = list_x[ max_index ], ymin = 0, ymax = max( list_y ), color = 'red', linestyle='-', label=f'x = { list_x[ max_index ] }, y = { max( list_y ) }')
+	mid_y = ( max(list_y ) + -0.2 ) / 2 
+	plt.text( list_x[ max_index ] - 0.02, mid_y, f'{ diff } eV', verticalalignment = "center", horizontalalignment = "right", color = "black", fontsize = 12 )
+	plt.axhline( 0, color = 'black', linestyle='--', linewidth = 2)
 	#ax2.set_ylim( ymin, ymax)
-	#yticks =  [0, 0.05, 0.1, 0.15 ] 
+	#yticks =  [0, 0.5, 1.0 ] 
 	#ax2.set_yticks( yticks )
 	#ax2.set_yticklabels( [ str(x) for x in yticks ] )
 	#ax2.set_xlim( xmin, xmax)
-	#xticks =  [ -0.2, -0.18, -0.16] 
+	#xticks =  [ 1.0, 1.2, 1.4, 1.6, 1.8 ] 
 	#ax2.set_xticks( xticks )
 	#ax2.set_xticklabels( [ str( x ) for x in xticks ] )
-	#ax2.hlines(0, -0.2, xmax, lw = 0.5, color = 'gray' )
-	#ax2.text(-0.175,  0.004 , '$\Phi$ = -1.4 (V vs RHE)', fontsize = 9)
+	os.chdir( "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/pics" )
 	plt.subplots_adjust(left=m_left, right=m_right, top=m_top, bottom=m_bottom, wspace=0.00, hspace= 0.0 )
-	#plt.savefig( '1_Na_free_energy.png', dpi = 600 )
+	#plt.savefig( '3_NH4_hydration.png', dpi = 600, transparent = True )
 	plt.show()
-

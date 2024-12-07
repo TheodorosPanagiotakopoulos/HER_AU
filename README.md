@@ -35,6 +35,10 @@ A constraint is applied to ensure the collective variable changes linearly with 
 The work required to transition the system from one state to another is determined by integrating the force acting on the system as the collective variable changes:
 
 `ΔΩ = ∫ (∂Ω/∂ξ) ⋅ ξ̇ dξ`
+\[
+\Delta \Omega = \int \frac{\partial \Omega}{\partial \xi} \cdot \dot{\xi} \, d\xi
+\]
+
 
 Where:
 - `Ω(x)`: The grand-canonical free energy as a function of the reaction coordinate `ξ`

@@ -206,7 +206,8 @@ def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, 
 				break
 
 	results.sort( key = lambda x: x[ 4 ] )
-	print( results )
+	for i in results:
+		print( i )
 	return results
 
 
@@ -270,7 +271,3 @@ if __name__ == "__main__":
 	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
 	NH4_mols = get_NH4_mols( "POSCAR" )
 	H2O_close_to_surface_and_NH4 = get_H2O_close_to_surface_and_NH4( "POSCAR", H2O_close, NH4_mols )
-	#closest_H2O = get_closest_H2O_to_electrode( "POSCAR", H2O_close )	
-	#CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
-	#CH3NH3_close  = get_CH3NH3_closest_to_electrode( "POSCAR", CH3NH3_mols )
-	#get_H2O_close_to_CH3NH3( "POSCAR", H2O_close, CH3NH3_mols )

@@ -34,14 +34,12 @@ A constraint is applied to ensure the collective variable changes linearly with 
 
 The work required to transition the system from one state to another is determined by integrating the force acting on the system as the collective variable changes:
 
-\[
-\Delta \Omega = \int_{\xi_1}^{\xi_2} \left( \frac{\partial \Omega}{\partial \xi} \right) \cdot \dot{\xi} \, d\xi
-\]
+`ΔΩ = ∫ (∂Ω/∂ξ) ⋅ ξ̇ dξ`
 
 Where:
-- \( \Omega(x) \): The grand-canonical free energy as a function of the reaction coordinate \( \xi \).
-- \( \frac{\partial \Omega}{\partial \xi} \): The force acting along the reaction coordinate.
-- \( \dot{\xi} \): The time derivative of the reaction coordinate (rate of change).  
+- `Ω(x)`: The grand-canonical free energy as a function of the reaction coordinate `ξ`
+- `∂Ω/∂ξ`: The force acting along the reaction coordinate
+- `ξ̇`: The rate of change of the reaction coordinate
 
 This method provides valuable insights into energy barriers and reaction pathways by simulating system behavior under controlled, gradual changes, making it a powerful tool for studying molecular interactions and chemical reactions.
 
@@ -50,19 +48,17 @@ This method provides valuable insights into energy barriers and reaction pathway
 ## Methodology
 
 ### Slow Growth Method
-The reaction coordinate is divided into small steps, and the free energy difference \( \Delta G \) is computed iteratively. The system's potential energy surface is sampled at each step, allowing for the evaluation of the incremental change in energy.
+The reaction coordinate is divided into small steps, and the free energy difference `ΔG` is computed iteratively. The system's potential energy surface is sampled at each step, allowing for the evaluation of the incremental change in energy.
 
 ### Trapezoidal Rule
-To integrate the force \( F(\lambda) \) along the reaction coordinate \( \lambda \), we apply the trapezoidal rule:
+To integrate the force `F(λ)` along the reaction coordinate `λ`, we apply the trapezoidal rule:
 
-\[
-\Delta G \approx \sum \left(\frac{\Delta \lambda}{2} \right) \cdot \left[F(\lambda_i) + F(\lambda_{i+1})\right]
-\]
+`ΔG = ∫ F(λ) dλ ≈ Σ (Δλ / 2) * [F(λ_i) + F(λ_i+1)]`
 
 Where:
-- \( \lambda \): The reaction coordinate.
-- \( F(\lambda) \): The force acting along the reaction coordinate.
-- \( \Delta \lambda \): The step size between points.
+- `λ` represents the reaction coordinate.
+- `F(λ)` is the force acting along the reaction coordinate.
+- `Δλ` is the step size.
 
 ---
 

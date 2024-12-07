@@ -32,7 +32,7 @@ To calculate activation barriers, we applied the **slow-growth method**, which i
 
 A constraint is applied to ensure the collective variable changes linearly with each simulation time step, allowing the system to maintain a **quasi-equilibrium state**. For example, the collective variable might represent the distance between two atoms or molecules, incrementally adjusted at a fixed rate.
 
-The work required to transition the system from one state to another is determined by integrating the force acting on the system as the collective variable change:
+The work required to transition the system from one state to another is determined by integrating the force acting on the system as the collective variable changes:
 
 `ΔΩ = ∫ (∂Ω/∂ξ) ⋅ ξ̇ dξ`
 

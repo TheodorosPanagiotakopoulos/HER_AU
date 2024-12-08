@@ -271,31 +271,31 @@ def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_
 
 			NH3_H_positions = system.positions[ NH3_H_indices ]
 			distances_to_O = cdist( [ O_position ], NH3_H_positions )
-			min_distance_idx = np.unravel_index(np.argmin(distances_to_O), distances_to_O.shape)
-			min_distance = distances_to_O[min_distance_idx]
+			min_distance_idx = np.unravel_index( np.argmin( distances_to_O ), distances_to_O.shape )
+			min_distance = distances_to_O[ min_distance_idx ]
 
 			if min_distance < threshold:
-				closest_NH3_H_idx = NH3_H_indices[min_distance_idx[1]]
+				closest_NH3_H_idx = NH3_H_indices[ min_distance_idx[ 1 ] ]
 				results.append({
-					"H2O": [h1_idx, o_idx, h2_idx],
+					"H2O": [ h1_idx, o_idx, h2_idx ],
 					"CH3NH3": ch3nh3,
 					"O": o_idx,
 					"H": {
 						"index": closest_H2O_H_idx,
-						"distance_to_Au": round(min_H2O_Au_dist, 3),
+						"distance_to_Au": round( min_H2O_Au_dist, 3 ),
 						"Au_idx": closest_Au_idx
 					},
 					"H_NH3": {
 						"index": closest_NH3_H_idx,
-						"distance_to_O": round(min_distance, 3)
+						"distance_to_O": round( min_distance, 3 )
 					}
 				})
 				break
 
-	results.sort(key=lambda x: x["H_NH3"]["distance_to_O"])
+	results.sort( key = lambda x: x[ "H_NH3" ][ "distance_to_O" ] )
 	for result in results:
-		print(result)
-		print("\n")
+		print( result )
+		print( "\n" )
 
 	return results
 

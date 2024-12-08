@@ -143,7 +143,7 @@ def get_NH4_closest_to_electrode( poscar, NH4_mols ):
 		distances = cdist( H_positions, au_positions )
 		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )
 		distance = distances[ min_distance_idx ]
-	
+
 		if distance < min_distance:
 			min_distance = distance
 			closest_h_idx = [ h1_idx, h2_idx, h3_idx, h4_idx ][ min_distance_idx[ 0 ] ]
@@ -276,27 +276,13 @@ def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_
 
 			if min_distance < threshold:
 				closest_NH3_H_idx = NH3_H_indices[ min_distance_idx[ 1 ] ]
-				results.append({
-					"H2O": [ h1_idx, o_idx, h2_idx ],
-					"CH3NH3": ch3nh3,
-					"O": o_idx,
-					"H": {
-						"index": closest_H2O_H_idx,
-						"distance_to_Au": round( min_H2O_Au_dist, 3 ),
-						"Au_idx": closest_Au_idx
-					},
-					"H_NH3": {
-						"index": closest_NH3_H_idx,
-						"distance_to_O": round( min_distance, 3 )
-					}
-				})
+				results.append( { "H2O": [ h1_idx, o_idx, h2_idx ], "CH3NH3": ch3nh3, "O": o_idx, "H": { "index": closest_H2O_H_idx, "distance_to_Au": round( min_H2O_Au_dist, 3 ), "Au_idx": closest_Au_idx }, "H_NH3": { "index": closest_NH3_H_idx, "distance_to_O": round( min_distance, 3 ) } } )
 				break
 
 	results.sort( key = lambda x: x[ "H_NH3" ][ "distance_to_O" ] )
 	for result in results:
 		print( result )
 		print( "\n" )
-
 	return results
 
 
@@ -312,18 +298,19 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 			min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )
 			min_distance = distances[ min_distance_idx ]
 			if min_distance < threshold:
-				h2o_atoms = [system.symbols[idx] for idx in [h1_idx, o_idx, h2_idx]]
-				ch3nh3_atoms = [system.symbols[idx] for idx in ch3nh3]
+				h2o_atoms = [system.symbols[ idx ] for idx in [ h1_idx, o_idx, h2_idx ] ]
+				ch3nh3_atoms = [system.symbols[ idx ] for idx in ch3nh3 ]
 				h2o_atom_idx = min_distance_idx[ 0 ]
 				ch3nh3_atom_idx = min_distance_idx[ 1 ]
 				h2o_symbol = h2o_atoms[ h2o_atom_idx ]
 				ch3nh3_symbol = ch3nh3_atoms[ ch3nh3_atom_idx ]
 				h2o_idx = [ h1_idx, o_idx, h2_idx ][ h2o_atom_idx ]
 				ch3nh3_idx = ch3nh3[ ch3nh3_atom_idx ]
-				description = f"symbol {h2o_symbol} = {h2o_idx} - symbol {ch3nh3_symbol} = {ch3nh3_idx}"
+				description = f"symbol { h2o_symbol } = { h2o_idx } - symbol { ch3nh3_symbol } = { ch3nh3_idx }"
 				results.append( ( [ h1_idx, o_idx, h2_idx ], ch3nh3, description, round( min_distance, 3 ) ) )
 				break
 	results.sort( key = lambda x: x [ 3 ] )
+
 	print( results )
 	return results
 

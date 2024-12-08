@@ -186,14 +186,14 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold=2.
 	#print( results )
 	return results
 
-def get_H2O_close_to_surface_and_NH4(poscar, H2O_close_to_electrode, NH4_mols, threshold=5.5):
+def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, threshold = 5.5 ):
 	system = read( poscar )
-	Au_indices = [i for i, atom in enumerate(system) if atom.symbol == 'Au']
+	Au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == 'Au' ]
 	results = list()
 
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
-		O_position = system.positions[o_idx]
+		O_position = system.positions[ o_idx ]
 
 		H2O_H_positions = [system.positions[ h1_idx ], system.positions[ h2_idx ] ]
 		distances_to_Au = cdist(H2O_H_positions, system.positions[ Au_indices ] )
@@ -209,11 +209,11 @@ def get_H2O_close_to_surface_and_NH4(poscar, H2O_close_to_electrode, NH4_mols, t
 			min_distance = distances_to_O[ min_distance_idx ]
 
 			if min_distance < threshold:
-				closest_NH4_H_idx = nh4[min_distance_idx[1]]
-				results.append( { "H2O": [ h1_idx, o_idx, h2_idx], "NH4": nh4, "O": o_idx, "H": { "index": closest_H2O_H_idx, "distance_to_Au": round(min_H2O_Au_dist, 3), "Au_idx": closest_Au_idx }, "H_NH4": { "index": closest_NH4_H_idx, "distance_to_O": round( min_distance, 3 ) } } )
+				closest_NH4_H_idx = nh4[ min_distance_idx[ 1 ] ]
+				results.append( { "H2O": [ h1_idx, o_idx, h2_idx ], "NH4": nh4, "O": o_idx, "H": { "index": closest_H2O_H_idx, "distance_to_Au": round(min_H2O_Au_dist, 3), "Au_idx": closest_Au_idx }, "H_NH4": { "index": closest_NH4_H_idx, "distance_to_O": round( min_distance, 3 ) } } )
 				break
 
-	results.sort(key=lambda x: x["H_NH4"]["distance_to_O"])
+	results.sort(key=lambda x: x[ "H_NH4" ][ "distance_to_O" ] )
 	for result in results:
 		print( result )
 		print( "\n" )
@@ -232,7 +232,7 @@ def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols ):
 		n_idx, h1_idx, h2_idx, h3_idx, c_idx, h4_idx, h5_idx, h6_idx = ch3nh3
 		CH3NH3_positions = system.positions[ [n_idx, h1_idx, h2_idx, h3_idx, c_idx, h4_idx, h5_idx, h6_idx] ]
 
-		H_positions = CH3NH3_positions[ 1: ] 
+		H_positions = CH3NH3_positions[ 1: ]
 		distances = cdist( H_positions, au_positions )
 		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )
 		distance = distances[ min_distance_idx ]

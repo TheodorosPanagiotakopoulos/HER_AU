@@ -1,4 +1,3 @@
-import numpy as np
 from ase.io import read
 from scipy.spatial.distance import cdist
 
@@ -90,6 +89,47 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 		)
 
 	return H2O_close_to_electrode
+
+def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold = 3.6 ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
+	au_positions = system.positions[ au_indices ]
+
+	CH3NH3_close_to_electrode = list()
+	results = list()
+
+	for mol in CH3NH3_mols:
+		N_idx, H1_N, H2_N, H3_N, C_idx, H1_C, H2_C, H3_C = mol
+		
+		NH3_H_indices = [ H1_N, H2_N, H3_N ]
+		NH3_H_positions = system.positions[ NH3_H_indices ]
+
+		distances_to_Au = cdist( NH3_H_positions, au_positions )
+		min_dist_idx = np.argmin( distances_to_Au )
+		min_distance = distances_to_Au.flatten()[ min_dist_idx ]
+
+		if min_distance < distance_threshold:
+			closest_H_idx = NH3_H_indices[ min_dist_idx // len( au_indices ) ]
+			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
+
+			results.append((
+				min_distance,
+				[N_idx, H1_N, H2_N, H3_N, C_idx, H1_C, H2_C, H3_C],
+				closest_H_idx,
+				closest_Au_idx
+			))
+			CH3NH3_close_to_electrode.append( mol )
+
+	results.sort(key = lambda x: x[ 0 ] )
+	for distance, mol, closest_H_idx, closest_Au_idx in results:
+		print(
+			f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}, {mol[5]}, {mol[6]}, {mol[7]}] \t"
+			f"H(N): {closest_H_idx} \t"
+			f"Au: {closest_Au_idx} \t"
+			f"Dist: {round( distance, 3 ) }"
+		)
+
+	return CH3NH3_close_to_electrode
 
 def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode ):
 	system = read( poscar )
@@ -339,9 +379,3 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 
 	print( results )
 	return results
-
-
-if __name__ == "__main__":
-	H2O_mols = get_H2O_mols( "POSCAR" )
-	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
-	H2O_closest = get_closest_H2O_to_electrode( "POSCAR", H2O_close )

@@ -50,17 +50,19 @@ def get_CH3NH3_mols( poscar, threshold = 1.2 ):
 	#print( "CH3NH3_mols = ", CH3NH3_mols )
 	return CH3NH3_mols
 
-def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold=2.6 ):
+def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6 ):
 	system = read( poscar )
-	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
 
 	H2O_close_to_electrode = list()
 
+	results = list()
+
 	for h2o in H2O_mols:
 		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[ [ h1_idx, o_idx, h2_idx ] ]
-		
+
 		H_positions = [ system.positions[ h1_idx ], system.positions[ h2_idx ] ]
 		distances_to_Au = cdist( H_positions, au_positions )
 		min_dist_idx = np.argmin( distances_to_Au )
@@ -68,16 +70,24 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold=2.6 )
 
 		if min_distance < distance_threshold:
 			closest_H_idx = h1_idx if min_dist_idx // len( au_indices ) == 0 else h2_idx
-			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
+			closest_Au_idx = au_indices[ min_dist_idx % len(au_indices ) ]
 
-			print(
-				f"[{h1_idx}, {o_idx}, {h2_idx}] \t"
-				f"H: {closest_H_idx} \t"
-				f"Au: {closest_Au_idx} \t"
-				f"Dist: {round(min_distance, 3)}"
-			)
+			results.append((
+				min_distance,
+				[h1_idx, o_idx, h2_idx],
+				closest_H_idx,
+				closest_Au_idx
+			))
+			H2O_close_to_electrode.append(h2o)
 
-			H2O_close_to_electrode.append( h2o )
+	results.sort( key = lambda x: x[0] )
+	for distance, h2o, closest_H_idx, closest_Au_idx in results:
+		print(
+			f"[{h2o[0]}, {h2o[1]}, {h2o[2]}] \t"
+			f"H: {closest_H_idx} \t"
+			f"Au: {closest_Au_idx} \t"
+			f"Dist: {round(distance, 3)}"
+		)
 
 	return H2O_close_to_electrode
 

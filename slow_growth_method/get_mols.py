@@ -50,19 +50,35 @@ def get_CH3NH3_mols( poscar, threshold = 1.2 ):
 	#print( "CH3NH3_mols = ", CH3NH3_mols )
 	return CH3NH3_mols
 
-def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6 ):
-	system = read( "POSCAR" )
-	au_indices = [ i for i, j in enumerate( system  ) if j.symbol == "Au" ]
+def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold=2.6 ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
+
 	H2O_close_to_electrode = list()
-	for i in H2O_mols:
-		h1_idx, o_idx, h2_idx = i
+
+	for h2o in H2O_mols:
+		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[ [ h1_idx, o_idx, h2_idx ] ]
-		distances = cdist( H2O_positions, au_positions )
-		min_distance = np.min( distances )
+		
+		H_positions = [ system.positions[ h1_idx ], system.positions[ h2_idx ] ]
+		distances_to_Au = cdist( H_positions, au_positions )
+		min_dist_idx = np.argmin( distances_to_Au )
+		min_distance = distances_to_Au.flatten()[ min_dist_idx ]
+
 		if min_distance < distance_threshold:
-			H2O_close_to_electrode.append( i )	
-	#print( H2O_close_to_electrode )
+			closest_H_idx = h1_idx if min_dist_idx // len( au_indices ) == 0 else h2_idx
+			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
+
+			print(
+				f"[{h1_idx}, {o_idx}, {h2_idx}] \t"
+				f"H: {closest_H_idx} \t"
+				f"Au: {closest_Au_idx} \t"
+				f"Dist: {round(min_distance, 3)}"
+			)
+
+			H2O_close_to_electrode.append( h2o )
+
 	return H2O_close_to_electrode
 
 def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode ):
@@ -318,5 +334,4 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
-	NH4_mols = get_NH4_mols( "POSCAR" )
-	H2O_close_to_surface_and_NH4 = get_H2O_close_to_surface_and_NH4( "POSCAR", H2O_close, NH4_mols )
+	H2O_closest = get_closest_H2O_to_electrode( "POSCAR", H2O_close )

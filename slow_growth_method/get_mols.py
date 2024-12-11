@@ -1,4 +1,3 @@
-import numpy as np
 from ase.io import read
 from scipy.spatial.distance import cdist
 
@@ -81,15 +80,57 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 			H2O_close_to_electrode.append(h2o)
 
 	results.sort( key = lambda x: x[0] )
-	#for distance, h2o, closest_H_idx, closest_Au_idx in results:
-	#	print(
-	#		f"[{h2o[0]}, {h2o[1]}, {h2o[2]}] \t"
-	#		f"H: {closest_H_idx} \t"
-	#		f"Au: {closest_Au_idx} \t"
-	#		f"Dist: {round(distance, 3)}"
-	#	)
+	for distance, h2o, closest_H_idx, closest_Au_idx in results:
+		print(
+			f"[{h2o[0]}, {h2o[1]}, {h2o[2]}] \t"
+			f"H: {closest_H_idx} \t"
+			f"Au: {closest_Au_idx} \t"
+			f"Dist: {round(distance, 3)}"
+		)
 
 	return H2O_close_to_electrode
+
+def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 3.6 ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
+	au_positions = system.positions[ au_indices ]
+
+	NH4_close_to_electrode = list()
+	results = list()
+
+	for mol in NH4_mols:
+		N_idx, H1_N, H2_N, H3_N, H4_N = mol
+
+		NH4_H_indices = [ H1_N, H2_N, H3_N, H4_N ]
+		NH4_H_positions = system.positions[ NH4_H_indices ]
+
+		distances_to_Au = cdist( NH4_H_positions, au_positions )
+		min_dist_idx = np.argmin( distances_to_Au )
+		min_distance = distances_to_Au.flatten()[ min_dist_idx ]
+
+		if min_distance < distance_threshold:
+			closest_H_idx = NH4_H_indices[ min_dist_idx // len( au_indices ) ]
+			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
+
+			results.append((
+				min_distance,
+				[ N_idx, H1_N, H2_N, H3_N, H4_N ],
+				closest_H_idx,
+				closest_Au_idx
+			))
+			NH4_close_to_electrode.append( mol )
+
+	results.sort( key = lambda x: x[0] )
+
+	for distance, mol, closest_H_idx, closest_Au_idx in results:
+		print(
+			f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}]\t"
+			f"H(N): {closest_H_idx}\t"
+			f"Au: {closest_Au_idx}\t"
+			f"Dist: {round(distance, 3)}"
+		)
+
+	return NH4_close_to_electrode
 
 def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold = 3.6 ):
 	system = read( poscar )
@@ -385,5 +426,4 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
-	CH3NH3_mols = get_CH3NH3_mols( "POSCAR"  )	
-	get_H2O_close_to_surface_and_CH3NH3( "POSCAR", H2O_close, CH3NH3_mols )
+	#get_NH4_within_surface_threshold

@@ -428,4 +428,4 @@ if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
 	NH4_mols = get_NH4_mols( "POSCAR" )
-	get_H2O_close_to_surface_and_NH4( "POSCAR", H2O_close, NH4_mols )
+	get_H2O_close_to_surface_and_NH4( "POSCAR",  H2O_close, NH4_mols )

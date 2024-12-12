@@ -213,28 +213,73 @@ def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electro
 	na_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Na" ]
 	au_positions = system.positions[ au_indices ]
 
-	closest_H2O = None
-	min_distance = float('inf')
+	results = list()
 
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
-		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]
+		H2O_positions = system.positions[ [ h1_idx, o_idx, h2_idx ] ]
 
-		is_attached_to_Na = any(np.linalg.norm(system.positions[o_idx] - system.positions[na_idx]) < distance_threshold for na_idx in na_indices)
+		is_attached_to_Na = any( np.linalg.norm(system.positions[ o_idx ] - system.positions[ na_idx ] ) < distance_threshold for na_idx in na_indices )
 		if not is_attached_to_Na:
 			continue
+		distances_h1 = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
+		distances_h2 = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
 
-		distances = cdist(H2O_positions, au_positions)
-		min_distance_idx = np.unravel_index(np.argmin(distances), distances.shape)
-		distance = distances[min_distance_idx]
+		min_h1_distance = np.min( distances_h1 )
+		min_h2_distance = np.min( distances_h2 )
 
-		if distance < min_distance:
-			min_distance = distance
-			h2_idx_closest = [h1_idx, o_idx, h2_idx][min_distance_idx[0]]
-			au_idx_closest = au_indices[min_distance_idx[1]]
-			closest_H2O = ([h1_idx, o_idx, h2_idx], h2_idx_closest, au_idx_closest, round(min_distance, 3))
-	#print( closest_H2O )
-	return closest_H2O
+		if min_h1_distance < min_h2_distance:
+			closest_H_idx = h1_idx
+			min_distance = min_h1_distance
+			closest_Au_idx = au_indices[ np.argmin( distances_h1 ) ]
+		else:
+			closest_H_idx = h2_idx
+			min_distance = min_h2_distance
+			closest_Au_idx = au_indices[ np.argmin(distances_h2 ) ]
+
+		if min_distance < distance_threshold:
+			results.append( [ [o_idx, h1_idx, h2_idx], f"O: {o_idx}", f"H: {closest_H_idx}", f"Au_closest_to_H_idx: {closest_Au_idx}", f"distance: {round(min_distance, 3)}" ] )
+	results.sort(key = lambda x: float( x[ -1 ].split( ': ')[ 1 ] ) )
+	for i in results:
+		print( i )
+	return results
+
+def get_H2O_near_electrode_NOT_from_Na_hydration_shell( poscar, H2O_close_to_electrode, distance_threshold = 3.6 ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+	na_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Na" ]
+	au_positions = system.positions[ au_indices ]
+
+	results = list()
+
+	for h2o in H2O_close_to_electrode:
+		h1_idx, o_idx, h2_idx = h2o
+		H2O_positions = system.positions[ [ h1_idx, o_idx, h2_idx ] ]
+
+		is_attached_to_Na = any( np.linalg.norm( system.positions[ o_idx ] - system.positions[ na_idx ] ) < distance_threshold for na_idx in na_indices )
+		if is_attached_to_Na:
+			continue
+		distances_h1 = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
+		distances_h2 = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
+
+		min_h1_distance = np.min( distances_h1 )
+		min_h2_distance = np.min( distances_h2 )
+
+		if min_h1_distance < min_h2_distance:
+			closest_H_idx = h1_idx
+			min_distance = min_h1_distance
+			closest_Au_idx = au_indices[ np.argmin( distances_h1 ) ]
+		else:
+			closest_H_idx = h2_idx
+			min_distance = min_h2_distance
+			closest_Au_idx = au_indices[ np.argmin( distances_h2 ) ]
+		if min_distance < distance_threshold:
+			results.append( [ [o_idx, h1_idx, h2_idx], f"O: {o_idx}", f"H: {closest_H_idx}", f"Au_closest_to_H_idx: {closest_Au_idx}", f"distance: {round(min_distance, 3)}" ] )
+	results.sort( key = lambda x: float( x[ -1 ].split( ': ' )[ 1 ] ) )
+	for i in results:
+		print( i )
+	return results
+
 
 def get_NH4_closest_to_electrode( poscar, NH4_mols ):
 	system = read( poscar )
@@ -450,6 +495,4 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
-	H2O_close = get_H2O_within_surface_threshold( "POSCAR", H2O_mols )
-	NH4_mols = get_NH4_mols( "POSCAR" )
-	get_H2O_close_to_surface_and_NH4( "POSCAR",  H2O_close, NH4_mols )
+	Hd_shell = get_H2O_near_electrode_NOT_from_Na_hydration_shell( "POSCAR", H2O_mols )

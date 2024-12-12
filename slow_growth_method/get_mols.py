@@ -355,7 +355,7 @@ def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols ):
 	print( closest_CH3NH3 )
 	return closest_CH3NH3
 
-def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_mols, threshold = 3.0 ):
+def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_mols, threshold = 5.5 ):
 	system = read( poscar )
 	Au_indices = [ i for i, atom in enumerate(system) if atom.symbol == 'Au' ]
 	results = list()
@@ -368,11 +368,11 @@ def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_
 		distances_to_Au = cdist( H2O_H_positions, system.positions[ Au_indices ] )
 		min_H2O_Au_dist_idx = np.unravel_index( np.argmin( distances_to_Au ), distances_to_Au.shape )
 		closest_H2O_H_idx = h1_idx if min_H2O_Au_dist_idx[ 0 ] == 0 else h2_idx
-		closest_Au_idx = Au_indices[ min_H2O_Au_dist_idx[ 1 ] ]
+		closest_Au_idx = Au_indices[min_H2O_Au_dist_idx[ 1 ] ]
 		min_H2O_Au_dist = distances_to_Au[ min_H2O_Au_dist_idx ]
 
 		for ch3nh3 in CH3NH3_mols:
-			N_idx = next( i for i in ch3nh3 if system[i].symbol == "N" )
+			N_idx = next( i for i in ch3nh3 if system[ i ].symbol == "N" )
 			NH3_H_indices = [ i for i in ch3nh3 if system[ i ].symbol == "H" and np.linalg.norm( system.positions[ i ] - system.positions[ N_idx ] ) < 1.2 ]
 
 			if len( NH3_H_indices ) != 3:
@@ -385,15 +385,26 @@ def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_
 
 			if min_distance < threshold:
 				closest_NH3_H_idx = NH3_H_indices[ min_distance_idx[ 1 ] ]
-				results.append( { "H2O": [ h1_idx, o_idx, h2_idx ], "CH3NH3": ch3nh3, "O": o_idx, "H": { "index": closest_H2O_H_idx, "distance_to_Au": round( min_H2O_Au_dist, 3 ), "Au_idx": closest_Au_idx }, "H_NH3": { "index": closest_NH3_H_idx, "distance_to_O": round( min_distance, 3 ) } } )
-				break
+				results.append({
+					"H2O": [h1_idx, o_idx, h2_idx],
+					"CH3NH3": ch3nh3,
+					"O": o_idx,
+					"H": {
+						"index": closest_H2O_H_idx,
+						"distance_to_Au": round(min_H2O_Au_dist, 3),
+						"Au_idx": closest_Au_idx
+					},
+					"H_CH3NH3": {
+						"index": closest_NH3_H_idx,
+						"distance_to_O": round(min_distance, 3)
+					}
+				})
 
-	results.sort( key = lambda x: x[ "H_NH3" ][ "distance_to_O" ] )
+	results.sort( key=lambda x: x[ "H_CH3NH3" ][ "distance_to_O" ] )
 	for result in results:
 		print( result )
 		print( "\n" )
 	return results
-
 
 def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, threshold = 2.5 ):
 	system = read( system )

@@ -295,15 +295,15 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold=2.
 	#print( results )
 	return results
 
-def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_N = 3.5 ):
+def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_H_of_NH4 = 3.8 ):
 	system = read( poscar )
-	Au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
+	Au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	results = list()
 
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
 		O_position = system.positions[ o_idx ]
-		H2O_H_positions = [ system.positions[h1_idx], system.positions[ h2_idx ] ]
+		H2O_H_positions = [ system.positions[ h1_idx ], system.positions[ h2_idx ] ]
 
 		distances_to_Au = cdist( H2O_H_positions, system.positions[ Au_indices ] )
 		min_H2O_Au_dist_idx = np.unravel_index( np.argmin( distances_to_Au ), distances_to_Au.shape )
@@ -316,7 +316,7 @@ def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, 
 			NH4_H_indices = [ i for i in nh4 if system[ i ].symbol == "H" ]
 			distance_O_to_N = np.linalg.norm( O_position - system.positions[ N_idx ] )
 
-			if distance_O_to_N < max_distance_O_to_N:
+			if distance_O_to_N < max_distance_O_to_H_of_NH4:
 				NH4_H_positions = system.positions[ NH4_H_indices ]
 
 				distances_to_O = cdist( [ O_position ], NH4_H_positions )
@@ -331,7 +331,7 @@ def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, 
 						"O": o_idx,
 						"H2O_closest": {
 							"H_index": H_idx_of_H2O_closest_to_th_electrode,
-							"distance_to_Au": round( min_H2O_Au_dist, 3 ),
+							"distance_to_Au": round(min_H2O_Au_dist, 3),
 							"Au_idx": closest_Au_idx
 						},
 						"NH4_closest": {
@@ -340,12 +340,11 @@ def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, 
 						}
 					})
 
-	results.sort( key=lambda x: x[ "NH4_closest" ][ "distance_to_O" ] )
+	results.sort( key = lambda x: x[ "NH4_closest" ][ "distance_to_O" ] )
 	for result in results:
 		print( result )
 		print( "\n" )
 	return results
-
 
 def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols ):
 	system = read( poscar )

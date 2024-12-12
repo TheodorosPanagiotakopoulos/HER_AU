@@ -295,34 +295,52 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold=2.
 	#print( results )
 	return results
 
-def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, threshold = 5.5 ):
+def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_N = 3.5 ):
 	system = read( poscar )
-	Au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == 'Au' ]
+	Au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	results = list()
 
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
 		O_position = system.positions[ o_idx ]
+		H2O_H_positions = [ system.positions[h1_idx], system.positions[ h2_idx ] ]
 
-		H2O_H_positions = [system.positions[ h1_idx ], system.positions[ h2_idx ] ]
-		distances_to_Au = cdist(H2O_H_positions, system.positions[ Au_indices ] )
-		min_H2O_Au_dist_idx = np.unravel_index( np.argmin(distances_to_Au), distances_to_Au.shape )
-		closest_H2O_H_idx = h1_idx if min_H2O_Au_dist_idx[ 0 ] == 0 else h2_idx
-		closest_Au_idx = Au_indices[ min_H2O_Au_dist_idx[ 1 ] ]
+		distances_to_Au = cdist( H2O_H_positions, system.positions[ Au_indices ] )
+		min_H2O_Au_dist_idx = np.unravel_index( np.argmin( distances_to_Au ), distances_to_Au.shape )
 		min_H2O_Au_dist = distances_to_Au[ min_H2O_Au_dist_idx ]
+		H_idx_of_H2O_closest_to_th_electrode = h1_idx if min_H2O_Au_dist_idx[ 0 ] == 0 else h2_idx
+		closest_Au_idx = Au_indices[ min_H2O_Au_dist_idx[ 1 ] ]
 
 		for nh4 in NH4_mols:
-			NH4_positions = system.positions[ nh4 ]
-			distances_to_O = cdist( [ O_position ], NH4_positions )
-			min_distance_idx = np.unravel_index( np.argmin( distances_to_O ), distances_to_O.shape )
-			min_distance = distances_to_O[ min_distance_idx ]
+			N_idx = next( i for i in nh4 if system[ i ].symbol == "N" )
+			NH4_H_indices = [ i for i in nh4 if system[ i ].symbol == "H" ]
+			distance_O_to_N = np.linalg.norm( O_position - system.positions[ N_idx ] )
 
-			if min_distance < threshold:
-				closest_NH4_H_idx = nh4[ min_distance_idx[ 1 ] ]
-				results.append( { "H2O": [ h1_idx, o_idx, h2_idx ], "NH4": nh4, "O": o_idx, "H": { "index": closest_H2O_H_idx, "distance_to_Au": round(min_H2O_Au_dist, 3), "Au_idx": closest_Au_idx }, "H_NH4": { "index": closest_NH4_H_idx, "distance_to_O": round( min_distance, 3 ) } } )
-				break
+			if distance_O_to_N < max_distance_O_to_N:
+				NH4_H_positions = system.positions[ NH4_H_indices ]
 
-	results.sort(key=lambda x: x[ "H_NH4" ][ "distance_to_O" ] )
+				distances_to_O = cdist( [ O_position ], NH4_H_positions )
+				min_distance_idx = np.unravel_index( np.argmin( distances_to_O ), distances_to_O.shape )
+				min_distance = distances_to_O[ min_distance_idx ]
+				H_of_NH4_idx_closest_to_O_of_H2O = NH4_H_indices[ min_distance_idx[ 1 ] ]
+
+				if min_distance < max_distance_to_Au:
+					results.append({
+						"H2O": [o_idx, h1_idx, h2_idx],
+						"NH4": [N_idx] + NH4_H_indices,
+						"O": o_idx,
+						"H2O_closest": {
+							"H_index": H_idx_of_H2O_closest_to_th_electrode,
+							"distance_to_Au": round( min_H2O_Au_dist, 3 ),
+							"Au_idx": closest_Au_idx
+						},
+						"NH4_closest": {
+							"H_of_NH4_idx_closest_to_O_of_H2O": H_of_NH4_idx_closest_to_O_of_H2O,
+							"distance_to_O": round(min_distance, 3)
+						}
+					})
+
+	results.sort( key=lambda x: x[ "NH4_closest" ][ "distance_to_O" ] )
 	for result in results:
 		print( result )
 		print( "\n" )

@@ -76,12 +76,12 @@ def get_free_energy( path_to_SG_calculation ):
 		tg.append( tg[ -1 ] + gg )
 	return cc, tg
 
-def get_barriers( path ):
+def get_barriers( path_to_SG_calculation ):
 	#do not allow printing from get free_energy() 
     original_stdout = sys.stdout
     sys.stdout = open(os.devnull, 'w')
     try:
-        x, y = get_free_energy( path )
+        x, y = get_free_energy( path_to_SG_calculation )
         if x == None or y == None:
             return None
         else:

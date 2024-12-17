@@ -95,15 +95,18 @@ def get_barriers( path_to_SG_calculation ):
             sys.stdout = original_stdout
 
 def get_barriers_to_dictionary( path_to_SG_calculation, barriers_dict ):
-    os.chdir( path_to_SG_calculation )
-    path_to_list = split_path( path_to_SG_calculation )
-    barrier = get_barriers( path_to_SG_calculation )
-    key = path_to_list[ -3 ] + "/" + path_to_list[ -2 ] +  "/" + path_to_list[ -1 ]
-    barriers_dict[ key ] = barrier
-    return barriers_dict
+	os.chdir( path_to_SG_calculation )
+	path_to_list = split_path( path_to_SG_calculation )
+	barrier = get_barriers( path_to_SG_calculation )
+	key = path_to_list[ -3 ] + "/" + path_to_list[ -2 ] +  "/" + path_to_list[ -1 ]
+	if barrier is None:
+		barriers_dict[ key ] = "Not started yet"
+	else:
+		barriers_dict[ key ] = barrier
+	#print( barriers_dict )
+	return barriers_dict
 
 if __name__ == "__main__":
-	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v3"
-	x, y = get_free_energy( path )
-	diff = round( max( y ) - min( y ), 2 )
-	print( diff )
+	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v4"
+	d = get_barriers_to_dictionary( path, {} )
+

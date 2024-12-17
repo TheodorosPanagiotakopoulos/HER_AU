@@ -5,6 +5,9 @@ import sys
 import pandas as pd
 import numpy as np
 
+def split_path( path_to_SG_calculation ):
+        return path_to_SG_calculation.split( "/" )
+
 def flatten_matrix( matrix ):
 	flat_list = list()
 	for i in matrix:
@@ -93,7 +96,6 @@ def get_barriers( path_to_SG_calculation ):
 
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v3"
-	#df1, df2 = get_cc_bm()
 	x, y = get_free_energy( path )
 	diff = round( max( y ) - min( y ), 2 )
 	print( diff )

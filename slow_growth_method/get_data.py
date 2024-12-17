@@ -42,6 +42,8 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 	if os.path.exists( path_to_SG_calculation ):
 		os.chdir( path_to_SG_calculation )
 		runs = get_RUNs()
+		if not runs and os.path.isfile( path_to_SG_calculation + "/OUTCAR" ) == False:
+			return None, None
 		if not runs:
 			print( "No RUN directories" )
 			CC, B_M = get_cc_bm()
@@ -67,18 +69,31 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 def get_free_energy( path_to_SG_calculation ):
 	tg = [ 0.0 ]
 	cc, b_m = collect_cc_and_bm( path_to_SG_calculation )
+	if ( not cc ) or ( not b_m ):
+		return None, None
 	for i in range( 1, len( cc ) ):
 		gg = 0.5 * ( cc[ i ]  -  cc[ i - 1 ] ) * ( b_m[ i ]  +  b_m[ i - 1 ] )
 		tg.append( tg[ -1 ] + gg )
-	print( len( tg ) )
-	print( len( cc ) )
 	return cc, tg
 
+def get_barriers( path ):
+	#do not allow printing from get free_energy() 
+    original_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
+    try:
+        x, y = get_free_energy( path )
+        if x == None or y == None:
+            return None
+        else:
+            barrier = round( max( y ) - min( y ), 2 )
+            return barrier
+    finally:
+            sys.stdout.close()
+            sys.stdout = original_stdout
+
 if __name__ == "__main__":
-	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/NH4/3_NH4/3_NH4_40_H2O_v1"
+	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v3"
 	#df1, df2 = get_cc_bm()
-	collect_cc_and_bm( path )
-	#print( df1 )
-	#cc, tg = get_free_energy( path )
-	#for i in cc:
-	#	print( i )
+	x, y = get_free_energy( path )
+	diff = round( max( y ) - min( y ), 2 )
+	print( diff )

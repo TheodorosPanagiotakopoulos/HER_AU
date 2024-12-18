@@ -43,6 +43,5 @@ This library is part of the Hydrogen Evolution Reaction project. Refer to the re
 Contributions and feedback are welcome. For issues or feature requests, please open a GitHub issue in the repository.
 
 ## Contact
-For questions or further information, contact the repository owner through the GitHub project page.
+For questions or collaboration inquiries, please reach out at [teosfp@hotmail.com].
 
-Happy Simulating!

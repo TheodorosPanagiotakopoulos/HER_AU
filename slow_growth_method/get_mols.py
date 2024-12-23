@@ -2,7 +2,7 @@ import numpy as np
 from ase.io import read
 from scipy.spatial.distance import cdist
 
-def get_H2O_mols( poscar, threshold = 1.2 ):
+def get_H2O_mols( poscar, threshold = 1.2, to_print = "False" ):
 	system = read( poscar )	
 	oxigen_indices = [ i for i, j in enumerate( system ) if j.symbol == "O" ]
 	hydrogen_indices = [ i for i, j in enumerate( system ) if j.symbol == "H" ]
@@ -13,10 +13,11 @@ def get_H2O_mols( poscar, threshold = 1.2 ):
 		close_hydrogens = [ hydrogen_indices[ i ] for i, j in enumerate( distances ) if j < threshold ]
 		if len( close_hydrogens ) == 2:
 			H2O_mols.append( [ close_hydrogens[ 0 ], i, close_hydrogens[ 1 ] ] )
-	#print( H2O_mols )
+	if to_print == "True":
+		print( H2O_mols )
 	return ( H2O_mols )
 
-def get_NH4_mols( poscar, threshold = 1.2 ):
+def get_NH4_mols( poscar, threshold = 1.2, to_print = "False" ):
 	system = read( poscar )
 	nitrogen_indices = [i for i, j in enumerate( system ) if j.symbol == "N" ]
 	hydrogen_indices = [i for i, j in enumerate( system ) if j.symbol == "H" ]
@@ -27,10 +28,11 @@ def get_NH4_mols( poscar, threshold = 1.2 ):
 		close_hydrogens = [ hydrogen_indices[ i ] for i, j in enumerate( distances ) if j < threshold ]
 		if len( close_hydrogens ) == 4:
 			NH4_mols.append( [ i ] + close_hydrogens )
-	#print( NH4_mols )
+	if to_print == "True":
+		print( NH4_mols )
 	return NH4_mols
 
-def get_CH3NH3_mols( poscar, threshold = 1.2 ):
+def get_CH3NH3_mols( poscar, threshold = 1.2, to_print = "False" ):
 	system = read( poscar )
 	nitrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "N" ]
 	hydrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "H" ]
@@ -47,10 +49,11 @@ def get_CH3NH3_mols( poscar, threshold = 1.2 ):
 				close_hydrogens_from_carbon = [ hydrogen_indices[ i ] for i, j in enumerate( distances_to_hydrogen_from_carbon ) if j < threshold ]
 				if len( close_hydrogens_from_carbon ) == 3:
 					CH3NH3_mols.append( [ i ] + close_hydrogens + close_carbon + close_hydrogens_from_carbon )
-	#print( "CH3NH3_mols = ", CH3NH3_mols )
+	if to_print == "True":
+		print( "CH3NH3_mols = ", CH3NH3_mols )
 	return CH3NH3_mols
 
-def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6 ):
+def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -81,17 +84,13 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 			H2O_close_to_electrode.append(h2o)
 
 	results.sort( key = lambda x: x[0] )
-	#for distance, h2o, closest_H_idx, closest_Au_idx in results:
-	#	print(
-	#		f"[{h2o[0]}, {h2o[1]}, {h2o[2]}] \t"
-	#		f"H: {closest_H_idx} \t"
-	#		f"Au: {closest_Au_idx} \t"
-	#		f"Dist: {round(distance, 3)}"
-	#	)
+	if to_print == "True":
+		for distance, h2o, closest_H_idx, closest_Au_idx in results:
+			print( f"[{h2o[0]}, {h2o[1]}, {h2o[2]}] \t" f"H: {closest_H_idx} \t" f"Au: {closest_Au_idx} \t" f"Dist: {round(distance, 3)}" )
 
 	return H2O_close_to_electrode
 
-def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6 ):
+def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -122,18 +121,12 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 			NH4_close_to_electrode.append( mol )
 
 	results.sort( key = lambda x: x[0] )
-
-	for distance, mol, closest_H_idx, closest_Au_idx in results:
-		print(
-			f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}]\t"
-			f"H(N): {closest_H_idx}\t"
-			f"Au: {closest_Au_idx}\t"
-			f"Dist: {round(distance, 3)}"
-		)
-
+	if to_print == "True":
+		for distance, mol, closest_H_idx, closest_Au_idx in results:
+			print( f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}]\t" f"H(N): {closest_H_idx}\t" f"Au: {closest_Au_idx}\t" f"Dist: {round(distance, 3)}" )
 	return NH4_close_to_electrode
 
-def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold = 3.6 ):
+def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold = 3.6, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -164,17 +157,12 @@ def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold
 			CH3NH3_close_to_electrode.append( mol )
 
 	results.sort(key = lambda x: x[ 0 ] )
-	for distance, mol, closest_H_idx, closest_Au_idx in results:
-		print(
-			f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}, {mol[5]}, {mol[6]}, {mol[7]}] \t"
-			f"H(N): {closest_H_idx} \t"
-			f"Au: {closest_Au_idx} \t"
-			f"Dist: {round( distance, 3 ) }"
-		)
-
+	if to_print == "True":
+		for distance, mol, closest_H_idx, closest_Au_idx in results:
+			print( f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}, {mol[5]}, {mol[6]}, {mol[7]}] \t" f"H(N): {closest_H_idx} \t" f"Au: {closest_Au_idx} \t" f"Dist: {round( distance, 3 ) }" )
 	return CH3NH3_close_to_electrode
 
-def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode ):
+def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	na_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Na" ]
@@ -203,11 +191,11 @@ def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode ):
 			h2_idx_closest = [ h1_idx, o_idx, h2_idx ][ min_distance_idx[ 0 ] ]
 			au_idx_closest = au_indices[ min_distance_idx[ 1 ] ]
 			closest_H2O = ( [ h1_idx, o_idx, h2_idx ], h2_idx_closest, au_idx_closest, round( min_distance, 3 ) )
-
-	print( closest_H2O )
+	if to_print == "True":
+		print( closest_H2O )
 	return closest_H2O
 
-def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electrode, distance_threshold = 2.6 ):
+def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electrode, distance_threshold = 2.6, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	na_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Na" ]
@@ -240,11 +228,12 @@ def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electro
 		if min_distance < distance_threshold:
 			results.append( [ [o_idx, h1_idx, h2_idx], f"O: {o_idx}", f"H: {closest_H_idx}", f"Au_closest_to_H_idx: {closest_Au_idx}", f"distance: {round(min_distance, 3)}" ] )
 	results.sort(key = lambda x: float( x[ -1 ].split( ': ')[ 1 ] ) )
-	for i in results:
-		print( i )
+	if to_print == "True":
+		for i in results:
+			print( i )
 	return results
 
-def get_H2O_near_electrode_NOT_from_Na_hydration_shell( poscar, H2O_close_to_electrode, distance_threshold = 3.6 ):
+def get_H2O_near_electrode_NOT_from_Na_hydration_shell( poscar, H2O_close_to_electrode, distance_threshold = 3.6, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	na_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Na" ]
@@ -276,12 +265,13 @@ def get_H2O_near_electrode_NOT_from_Na_hydration_shell( poscar, H2O_close_to_ele
 		if min_distance < distance_threshold:
 			results.append( [ [o_idx, h1_idx, h2_idx], f"O: {o_idx}", f"H: {closest_H_idx}", f"Au_closest_to_H_idx: {closest_Au_idx}", f"distance: {round(min_distance, 3)}" ] )
 	results.sort( key = lambda x: float( x[ -1 ].split( ': ' )[ 1 ] ) )
-	for i in results:
-		print( i )
+	if to_print == "True":
+		for i in results:
+			print( i )
 	return results
 
 
-def get_NH4_closest_to_electrode( poscar, NH4_mols ):
+def get_NH4_closest_to_electrode( poscar, NH4_mols, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 
@@ -303,11 +293,11 @@ def get_NH4_closest_to_electrode( poscar, NH4_mols ):
 			closest_h_idx = [ h1_idx, h2_idx, h3_idx, h4_idx ][ min_distance_idx[ 0 ] ]
 			au_idx_closest = au_indices[ min_distance_idx[ 1 ] ]
 			closest_NH4 = ( [ n_idx, h1_idx, h2_idx, h3_idx, h4_idx ], closest_h_idx, au_idx_closest, round(min_distance, 3) )
-
-	#print( closest_NH4 )
+	if to_print == "True":
+		print( closest_NH4 )
 	return closest_NH4
 
-def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold=2.5 ):
+def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold = 2.5, to_print = "False" ):
 	system = read( poscar )
 	results = []
 
@@ -337,10 +327,11 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold=2.
 				results.append( ( [ h1_idx, o_idx, h2_idx ], nh4, description, round( min_distance, 3 ) ) )
 				break
 	results.sort( key = lambda x: x[ 3 ] )
-	#print( results )
+	if to_print == "True":
+		print( results )
 	return results
 
-def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_H_of_NH4 = 3.8 ):
+def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_H_of_NH4 = 3.8, to_print = "False" ):
 	system = read( poscar )
 	Au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	results = list()
@@ -386,12 +377,13 @@ def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, 
 					})
 
 	results.sort( key = lambda x: x[ "NH4_closest" ][ "distance_to_O" ] )
-	for result in results:
-		print( result )
-		print( "\n" )
+	if to_print == "True":
+		for result in results:
+			print( result )
+			print( "\n" )
 	return results
 
-def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols ):
+def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 
@@ -413,12 +405,12 @@ def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols ):
 			closest_h_idx_of_NH3_group = [ h1_idx, h2_idx, h3_idx ][ min_distance_idx[ 0 ] ]
 			au_idx_closest = au_indices[ min_distance_idx[ 1 ] ]
 			closest_CH3NH3 = ( [ n_idx, h1_idx, h2_idx, h3_idx, c_idx, h4_idx, h5_idx, h6_idx ], closest_h_idx_of_NH3_group, au_idx_closest, round(min_distance, 3 ) )
-
-	print( closest_CH3NH3 )
+	if to_print == "True":
+		print( closest_CH3NH3 )
 	return closest_CH3NH3
 
 
-def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_mols, max_distance_to_Au = 5.5, max_distance_of_H_of_NH3_group_of_CH3NH3_to_O_of_H2O = 4 ):
+def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_mols, max_distance_to_Au = 5.5, max_distance_of_H_of_NH3_group_of_CH3NH3_to_O_of_H2O = 4, to_print = "False" ):
 	system = read( poscar )
 	Au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	results = list()
@@ -459,12 +451,13 @@ def get_H2O_close_to_surface_and_CH3NH3( poscar, H2O_close_to_electrode, CH3NH3_
 				})
 
 	results.sort( key = lambda x: x[ "CH3NH3_closest" ][ "distance_to_O" ] )
-	for result in results:
-		print( result )
-		print( "\n" )
+	if to_print == "True":
+		for result in results:
+			print( result )
+			print( "\n" )
 	return results
 
-def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, threshold = 2.5 ):
+def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, threshold = 2.5, to_print = "False" ):
 	system = read( system )
 	results = list()
 	for h2o in H2O_close_to_electrode:
@@ -488,11 +481,11 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 				results.append( ( [ h1_idx, o_idx, h2_idx ], ch3nh3, description, round( min_distance, 3 ) ) )
 				break
 	results.sort( key = lambda x: x [ 3 ] )
-
-	print( results )
+	if to_print == "True":
+		print( results )
 	return results
 
 
 if __name__ == "__main__":
-	H2O_mols = get_H2O_mols( "POSCAR" )
-	Hd_shell = get_H2O_near_electrode_NOT_from_Na_hydration_shell( "POSCAR", H2O_mols )
+	CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
+	get_CH3NH3_within_surface_threshold( "POSCAR", CH3NH3_mols, to_print = "True" )

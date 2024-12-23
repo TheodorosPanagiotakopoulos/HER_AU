@@ -1,6 +1,7 @@
 import numpy as np
 from ase.io import read
 from scipy.spatial.distance import cdist
+
 ################################## H2O molecules ##################################
 
 #H2O molecules in the system

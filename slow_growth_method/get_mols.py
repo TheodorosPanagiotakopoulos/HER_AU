@@ -230,57 +230,6 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 			print( f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}]\t" f"H(N): {closest_H_idx}\t" f"Au: {closest_Au_idx}\t" f"Dist: {round(distance, 3)}" )
 	return NH4_close_to_electrode
 
-#H2O molecules close to surface and close to NH4, from NH4 hydration shel
-#For shuttling (Best)
-def get_NH4_hydration_shell( poscar, H2O_close_to_electrode, NH4_molecules, distance_threshold=2.6, to_print="False" ):
-	system = read( poscar )
-	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
-	au_positions = system.positions[au_indices ]
-
-	results = list()
-
-	for nh4 in NH4_molecules:
-		n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx = nh4
-		NH4_H_indices = [h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx]
-
-		for h2o in H2O_close_to_electrode:
-			h1_idx, o_idx, h2_idx = h2o
-
-			closest_nh4_h_to_h2o = None
-			min_distance_to_nh4_h = float('inf')
-			for h_nh4_idx in NH4_H_indices:
-				distance = np.linalg.norm(system.positions[o_idx] - system.positions[h_nh4_idx])
-				if distance < distance_threshold and distance < min_distance_to_nh4_h:
-					closest_nh4_h_to_h2o = h_nh4_idx
-					min_distance_to_nh4_h = distance
-
-			if closest_nh4_h_to_h2o is None:
-				continue
-
-			distances_h1_to_au = cdist([system.positions[h1_idx]], au_positions).flatten()
-			distances_h2_to_au = cdist([system.positions[h2_idx]], au_positions).flatten()
-
-			min_h1_distance_to_au = np.min(distances_h1_to_au)
-			min_h2_distance_to_au = np.min(distances_h2_to_au)
-
-			if min_h1_distance_to_au < min_h2_distance_to_au:
-				closest_h2o_h_idx = h1_idx
-				min_distance_to_au = min_h1_distance_to_au
-				closest_au_idx = au_indices[np.argmin(distances_h1_to_au)]
-			else:
-				closest_h2o_h_idx = h2_idx
-				min_distance_to_au = min_h2_distance_to_au
-				closest_au_idx = au_indices[np.argmin(distances_h2_to_au)]
-			results.append( { "[N, H1, H2, H3, H4]": [n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx], "[H1, O, H2]": [h1_idx, o_idx, h2_idx], "[Au]": [closest_au_idx], "[H - Au]": [f"{closest_h2o_h_idx} - {closest_au_idx} = {round(min_distance_to_au, 3)}"], "[H - O NH4-H2O]": round( min_distance_to_nh4_h, 3 ), "O-H-H_NH4": [ o_idx, closest_h2o_h_idx, closest_nh4_h_to_h2o ] } )
-
-	results.sort(key=lambda x: float(x["[H - Au]"][0].split('= ')[1]))
-
-	if to_print == "True":
-		for result in results:
-			print( result )
-
-	return results
-
 #Closest NH4 molecule to the electrode based on the hydrogen atom of the NH4 molecule nearest to the electrode
 #The function returns only one NH4 molecule
 #For NH4 split
@@ -311,9 +260,68 @@ def get_NH4_closest_to_electrode( poscar, NH4_mols, to_print = "False" ):
 		print( closest_NH4 )
 	return closest_NH4
 
-#H2O molecules close to surface and close to NH4
+#H2O molecules close to surface and close to NH4, from NH4 hydration shel
 #For shuttling (Best)
-def get_H2O_close_to_surface_and_NH4( poscar, H2O_close_to_electrode, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_H_of_NH4 = 3.8, to_print = "False" ):
+def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold=2.6, to_print = "False" ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+	au_positions = system.positions[ au_indices ]
+
+	final_results = list()
+
+	for nh4 in NH4_molecules:
+		n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx = nh4
+		NH4_H_indices = [ h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx ]
+
+		molecule_results = list()
+
+		for h2o in H2O_mols:
+			h1_idx, o_idx, h2_idx = h2o
+
+			closest_nh4_h_to_h2o = None
+			min_distance_to_nh4_h = float( 'inf' )
+			for h_nh4_idx in NH4_H_indices:
+				distance = np.linalg.norm( system.positions[ o_idx ] - system.positions[ h_nh4_idx ] )
+				if distance < distance_threshold and distance < min_distance_to_nh4_h:
+					closest_nh4_h_to_h2o = h_nh4_idx
+					min_distance_to_nh4_h = distance
+
+			if closest_nh4_h_to_h2o is None:
+				continue
+
+			distances_h1_to_au = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
+			distances_h2_to_au = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
+
+			min_h1_distance_to_au = np.min( distances_h1_to_au )
+			min_h2_distance_to_au = np.min( distances_h2_to_au )
+
+			if min_h1_distance_to_au < min_h2_distance_to_au:
+				closest_h2o_h_idx = h1_idx
+				min_distance_to_au = min_h1_distance_to_au
+				closest_au_idx = au_indices[ np.argmin( distances_h1_to_au ) ]
+			else:
+				closest_h2o_h_idx = h2_idx
+				min_distance_to_au = min_h2_distance_to_au
+				closest_au_idx = au_indices[ np.argmin( distances_h2_to_au ) ]
+			molecule_results.append({
+				"[N, H1, H2, H3, H4]": [n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx],
+				"[H1, O, H2]": [h1_idx, o_idx, h2_idx],
+				"[Au]": [closest_au_idx],
+				"[H - Au]": [f"{closest_h2o_h_idx} - {closest_au_idx} = {round(min_distance_to_au, 3)}"],
+				"[H - O NH4-H2O]": round(min_distance_to_nh4_h, 3),
+				"O-H-H_NH4": [o_idx, closest_h2o_h_idx, closest_nh4_h_to_h2o]
+			})
+		molecule_results.sort(key=lambda x: float( x[ "[H - Au]" ][ 0 ].split( '= ' )[ 1 ] ) )
+		final_results.extend( molecule_results )
+		if to_print == "True":
+			for result in molecule_results:
+				print( result )
+			print( "\n" )
+	return final_results
+
+#H2O molecules close to surface and close to NH4
+#For shuttling
+def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5, max_distance_O_to_H_of_NH4 = 3.8, to_print = "False" ):
 	system = read( poscar )
 	Au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	results = list()
@@ -579,4 +587,4 @@ def get_H2O_close_to_CH3NH3( system, H2O_close_to_electrode, CH3NH3_mols, thresh
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	NH4_mols = get_NH4_mols( "POSCAR" )
-	get_NH4_hydration_shell( "POSCAR",  H2O_mols, NH4_mols, to_print = "True" )
+	get_NH4_hydration_shell( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )

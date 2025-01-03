@@ -90,15 +90,15 @@ def get_Na_hydration_shell(poscar, H2O_mols, Na_atoms, distance_threshold=2.6, t
 
 			molecule_results.append({ "[Na]": [na_idx], "[H1, O, H2]": [h1_idx, o_idx, h2_idx], "[Au]": [closest_au_h1_idx, closest_au_h2_idx], "[H1 - Au]": [f"{h1_idx} - {closest_au_h1_idx} = {round(min_h1_distance_to_au, 3)}"], "[H2 - Au]": [f"{h2_idx} - {closest_au_h2_idx} = {round(min_h2_distance_to_au, 3)}"], "[Na - O H2O]": round(distance_to_oxygen, 3), } )
 
-        molecule_results.sort(key=lambda x: float(x["[H1 - Au]"][0].split(" = ")[1]))
-        final_results.extend( molecule_results )
+		molecule_results.sort(key=lambda x: float(x["[H1 - Au]"][0].split(" = ")[1]))
+		final_results.extend( molecule_results )
 
-        if to_print == "True":
-            for result in molecule_results:
-                print(result)
-            print("\n")
+		if to_print == "True":
+			for result in molecule_results:
+				print(result)
+			print("\n")
 
-    return final_results
+	return final_results
 
 #Get H2O mols NOT in the Na hydration shell 
 #H2O -> OH + H*

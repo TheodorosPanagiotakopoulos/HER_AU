@@ -495,4 +495,4 @@ def get_non_CH3NH3_hydration_shell( poscar, H2O_mols, CH3NH3_molecules, distance
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	NH4_mols = get_NH4_mols( "POSCAR" )
-	get_non_NH4_hydration( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )
+	get_non_NH4_hydration_shell( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )

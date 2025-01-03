@@ -115,43 +115,37 @@ def get_Na_hydration_shell( poscar, H2O_mols, Na_atoms, distance_threshold = 2.6
 
 #Get H2O mols NOT in the Na hydration shell 
 #H2O -> OH + H*
-def get_non_Na_hydration_shell(poscar, H2O_mols, Na_atoms, distance_threshold=2.6, to_print="False"):
-	system = read( poscar )
-	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
-	au_positions = system.positions[ au_indices ]
-	non_hydration_H2O = list()
+def get_non_Na_hydration_shell( poscar, H2O_mols, Na_atoms, distance_threshold = 2.7, to_print = "False" ):
+    system = read( poscar )
+    au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+    au_positions = system.positions[ au_indices ]
+    non_hydration_H2O = list()
 
-	for h2o in H2O_mols:
-		h1_idx, o_idx, h2_idx = h2o
+    for h2o in H2O_mols:
+        h1_idx, o_idx, h2_idx = h2o
+        is_in_hydration_shell = any(
+            np.linalg.norm( system.positions[ o_idx ] - system.positions[ na_idx ] ) <= distance_threshold
+            for na_idx in Na_atoms
+        )
+        if not is_in_hydration_shell:
+            distances_h1_to_au = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
+            distances_h2_to_au = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
+            closest_au_h1_idx = au_indices[ np.argmin( distances_h1_to_au ) ]
+            closest_au_h2_idx = au_indices[ np.argmin( distances_h2_to_au ) ]
+            min_h1_distance_to_au = np.min( distances_h1_to_au )
+            min_h2_distance_to_au = np.min( distances_h2_to_au )
+            non_hydration_H2O.append({
+                "H2O": [ h1_idx, o_idx, h2_idx ],
+                f"{h1_idx}-{closest_au_h1_idx}": round( min_h1_distance_to_au, 3 ),
+                f"{h2_idx}-{closest_au_h2_idx}": round( min_h2_distance_to_au, 3 )
+            })
+    sorted_list = sorted( non_hydration_H2O, key=lambda d: list(d.values() )[ 1 ] )
+    if to_print == "True":
+        print( "H2O molecules not in Na hydration shell:" )
+        for h2o in sorted_list:
+            print( h2o )
+    return non_hydration_H2O
 
-		is_in_hydration_shell = False
-		for na_idx in Na_atoms:
-			distance_to_oxygen = np.linalg.norm(system.positions[o_idx] - system.positions[na_idx])
-			if distance_to_oxygen <= distance_threshold:
-				is_in_hydration_shell = True
-				break  
-
-		if not is_in_hydration_shell:
-			distances_h1_to_au = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
-			distances_h2_to_au = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
-
-			closest_au_h1_idx = au_indices[ np.argmin(distances_h1_to_au ) ]
-			closest_au_h2_idx = au_indices[ np.argmin(distances_h2_to_au ) ]
-
-			min_h1_distance_to_au = np.min( distances_h1_to_au )
-			min_h2_distance_to_au = np.min( distances_h2_to_au )
-
-			non_hydration_H2O.append({
-				"H2O": [ h1_idx, o_idx, h2_idx ],
-				f"{h1_idx}-{closest_au_h1_idx}": round(min_h1_distance_to_au, 3),
-				f"{h2_idx}-{closest_au_h2_idx}": round(min_h2_distance_to_au, 3)
-			})
-	sorted_list = sorted( non_hydration_H2O, key=lambda d: list( d.values() )[ 1 ] )
-	if to_print == "True":
-		print("H2O molecules not in Na hydration shell:")
-		for h2o in sorted_list:
-			print(h2o)
-	return non_hydration_H2O
 
 ################################## NH4 molecules ##################################
 

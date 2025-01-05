@@ -350,7 +350,6 @@ def get_NH4_hydration_shell_shuttling(poscar, H2O_mols, NH4_molecules, distance_
                 "[H1, O, H2]": [ h1_idx, o_idx, h2_idx ],
                 "H1-Au1": f"{h1_idx} - {closest_au1_idx} = {round(min_h1_distance_to_au, 3)}",
                 "H2-Au2": f"{h2_idx} - {closest_au2_idx} = {round(min_h2_distance_to_au, 3)}",
-                "[H - O NH4-H2O]": round( min_distance_to_nh4_h, 3 ),
                 "N-O Distance": round( distance_n_to_o, 3 ),
                 "Distances of NH4-H to O": distances_of_nh4_h_to_o
             })

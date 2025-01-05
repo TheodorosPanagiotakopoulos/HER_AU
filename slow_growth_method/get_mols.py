@@ -531,6 +531,68 @@ def get_non_CH3NH3_hydration_shell( poscar, H2O_mols, CH3NH3_molecules, distance
 
 	return non_hydration_H2O
 
+def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold=2.6, to_print="False"):
+	system = read(poscar)
+	au_indices = [i for i, atom in enumerate(system) if atom.symbol == "Au"]
+	au_positions = system.positions[au_indices]
+
+	final_results = list()
+
+	for ch3nh3 in CH3NH3_molecules:
+		n_idx, h1_ch3nh3, h2_ch3nh3, h3_ch3nh3, c_idx, h4_ch3nh3, h5_ch3nh3, h6_ch3nh3 = ch3nh3
+		CH3NH3_H_indices = [h1_ch3nh3, h2_ch3nh3, h3_ch3nh3, h4_ch3nh3, h5_ch3nh3, h6_ch3nh3]
+
+		molecule_results = list()
+
+		for h2o in H2O_mols:
+			h1_idx, o_idx, h2_idx = h2o
+
+			closest_ch3nh3_h_to_h2o = None
+			min_distance_to_ch3nh3_h = float('inf')
+			all_distances_to_o = {}
+
+			for h_ch3nh3_idx in CH3NH3_H_indices:
+				distance = np.linalg.norm(system.positions[o_idx] - system.positions[h_ch3nh3_idx])
+				all_distances_to_o[h_ch3nh3_idx] = f"{h_ch3nh3_idx}\t{round(distance, 3)}"
+				if distance < distance_threshold and distance < min_distance_to_ch3nh3_h:
+					closest_ch3nh3_h_to_h2o = h_ch3nh3_idx
+					min_distance_to_ch3nh3_h = distance
+
+			if closest_ch3nh3_h_to_h2o is None:
+				continue
+
+			distances_h1_to_au = cdist([system.positions[h1_idx]], au_positions).flatten()
+			distances_h2_to_au = cdist([system.positions[h2_idx]], au_positions).flatten()
+
+			min_h1_distance_to_au = np.min(distances_h1_to_au)
+			min_h2_distance_to_au = np.min(distances_h2_to_au)
+
+			closest_au1_idx = au_indices[np.argmin(distances_h1_to_au)]
+			closest_au2_idx = au_indices[np.argmin(distances_h2_to_au)]
+
+			distance_n_to_o = np.linalg.norm(system.positions[n_idx] - system.positions[o_idx])
+
+			distances_of_ch3nh3_h_to_o = {}
+			for h_idx, dist in all_distances_to_o.items():
+				split_distance = dist.split('\t')[1]
+				distances_of_ch3nh3_h_to_o[h_idx] = f"H:{h_idx}-O:{o_idx}= {split_distance}"
+
+			molecule_results.append({
+				"[N, H1, H2, H3, C, H4, H5, H6]": [n_idx, h1_ch3nh3, h2_ch3nh3, h3_ch3nh3, c_idx, h4_ch3nh3, h5_ch3nh3, h6_ch3nh3],
+				"[H1, O, H2]": [h1_idx, o_idx, h2_idx],
+				"H1-Au1": f"{h1_idx} - {closest_au1_idx} = {round(min_h1_distance_to_au, 3)}",
+				"H2-Au2": f"{h2_idx} - {closest_au2_idx} = {round(min_h2_distance_to_au, 3)}",
+				"N-O Distance": round(distance_n_to_o, 3),
+				"Distances of CH3NH3-H to O": distances_of_ch3nh3_h_to_o
+			})
+
+		molecule_results.sort(key=lambda x: float(x["H1-Au1"].split('= ')[1]))
+		final_results.extend(molecule_results)
+		if to_print == "True":
+			for result in molecule_results:
+				print(result)
+			print("\n")
+	return final_results
 
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )

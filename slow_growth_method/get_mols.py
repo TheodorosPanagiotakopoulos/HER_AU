@@ -155,41 +155,38 @@ def get_NH4_mols( poscar, threshold = 1.2, to_print = "False" ):
 #NH4 molecules within the surface threshold
 #For NH4 split
 #NH4 -> NH3 + H*
-def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6, to_print = "False" ):
+def get_NH4_within_surface_threshold(poscar, NH4_mols, distance_threshold = 5.6, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
-
 	NH4_close_to_electrode = list()
 	results = list()
-
 	for mol in NH4_mols:
 		N_idx, H1_N, H2_N, H3_N, H4_N = mol
-
 		NH4_H_indices = [ H1_N, H2_N, H3_N, H4_N ]
 		NH4_H_positions = system.positions[ NH4_H_indices ]
-
 		distances_to_Au = cdist( NH4_H_positions, au_positions )
-		min_dist_idx = np.argmin( distances_to_Au )
-		min_distance = distances_to_Au.flatten()[ min_dist_idx ]
-
-		if min_distance < distance_threshold:
-			closest_H_idx = NH4_H_indices[ min_dist_idx // len( au_indices ) ]
-			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
-
-			results.append((
-				min_distance,
-				[ N_idx, H1_N, H2_N, H3_N, H4_N ],
-				closest_H_idx,
-				closest_Au_idx
-			))
+		closest_info = list()
+		for h_idx, h_distances in enumerate( distances_to_Au ):
+			min_dist_idx = np.argmin( h_distances)
+			min_distance = h_distances[ min_dist_idx ]
+			closest_Au_idx = au_indices[ min_dist_idx ]
+			closest_info.append( ( NH4_H_indices[ h_idx ], closest_Au_idx, min_distance ) )
+		closest_info.sort( key=lambda x: x[ 2 ] )
+		if any( info[ 2 ] < distance_threshold for info in closest_info ):
+			results.append( (
+				[N_idx, H1_N, H2_N, H3_N, H4_N],
+				closest_info
+			) )
 			NH4_close_to_electrode.append( mol )
-
-	results.sort( key = lambda x: x[0] )
+	results.sort( key=lambda x: min( info[ 2 ] for info in x[ 1 ] ) )
 	if to_print == "True":
-		for distance, mol, closest_H_idx, closest_Au_idx in results:
-			print( f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}]\t" f"H(N): {closest_H_idx}\t" f"Au: {closest_Au_idx}\t" f"Dist: {round(distance, 3)}" )
+		for mol, closest_info in results:
+			print( f"Molecule: {mol}" )
+			for h_idx, au_idx, dist in closest_info:
+				print( f"\tH(N): {h_idx}\tAu: {au_idx}\tDist: {round(dist, 3)}" )
 	return NH4_close_to_electrode
+
 
 #H2O molecules that belong to NH4 hydration shell
 #For H2O dissociation ( H2O -> OH + H* ) if H of H2O is close to electrode
@@ -539,4 +536,4 @@ def get_non_CH3NH3_hydration_shell( poscar, H2O_mols, CH3NH3_molecules, distance
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	NH4_mols = get_NH4_mols( "POSCAR" )
-	get_NH4_hydration_shell( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )
+	get_NH4_within_surface_threshold( "POSCAR", NH4_mols, to_print = "True" )

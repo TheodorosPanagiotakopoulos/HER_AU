@@ -462,6 +462,9 @@ def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_thre
 			closest_au2_idx = au_indices[ np.argmin( distances_h2_to_au ) ]
 
 			distance_n_to_o = np.linalg.norm( system.positions[ n_idx ] - system.positions[ o_idx ] )
+			# Exclude pairs with N-O distance > 4 A (max distance between the N of CH3NH3 and O of H2O molecules)
+			if distance_n_to_o > 4:
+				continue			
 	
 			n_attached_h_distances = {}
 			for h_idx in [ h4_nh3_idx, h5_nh3_idx, h6_nh3_idx ]:
@@ -531,16 +534,19 @@ def get_non_CH3NH3_hydration_shell( poscar, H2O_mols, CH3NH3_molecules, distance
 
 	return non_hydration_H2O
 
-def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold=2.6, to_print="False"):
-	system = read(poscar)
-	au_indices = [i for i, atom in enumerate(system) if atom.symbol == "Au"]
-	au_positions = system.positions[au_indices]
+
+#H2O molecules that belong to NH4 hydration shell
+#For shuttling
+def get_CH3NH3_hydration_shell_shuttling( poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 2.6, to_print = "False" ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au"]
+	au_positions = system.positions[ au_indices ]
 
 	final_results = list()
 
 	for ch3nh3 in CH3NH3_molecules:
 		n_idx, h1_ch3nh3, h2_ch3nh3, h3_ch3nh3, c_idx, h4_ch3nh3, h5_ch3nh3, h6_ch3nh3 = ch3nh3
-		CH3NH3_H_indices = [h1_ch3nh3, h2_ch3nh3, h3_ch3nh3, h4_ch3nh3, h5_ch3nh3, h6_ch3nh3]
+		CH3NH3_H_indices = [ h1_ch3nh3, h2_ch3nh3, h3_ch3nh3, h4_ch3nh3, h5_ch3nh3, h6_ch3nh3 ]
 
 		molecule_results = list()
 
@@ -548,12 +554,12 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 			h1_idx, o_idx, h2_idx = h2o
 
 			closest_ch3nh3_h_to_h2o = None
-			min_distance_to_ch3nh3_h = float('inf')
+			min_distance_to_ch3nh3_h = float( 'inf' )
 			all_distances_to_o = {}
 
 			for h_ch3nh3_idx in CH3NH3_H_indices:
-				distance = np.linalg.norm(system.positions[o_idx] - system.positions[h_ch3nh3_idx])
-				all_distances_to_o[h_ch3nh3_idx] = f"{h_ch3nh3_idx}\t{round(distance, 3)}"
+				distance = np.linalg.norm( system.positions[ o_idx ] - system.positions[ h_ch3nh3_idx ] )
+				all_distances_to_o[ h_ch3nh3_idx ] = f"{h_ch3nh3_idx}\t{round(distance, 3)}"
 				if distance < distance_threshold and distance < min_distance_to_ch3nh3_h:
 					closest_ch3nh3_h_to_h2o = h_ch3nh3_idx
 					min_distance_to_ch3nh3_h = distance
@@ -561,20 +567,23 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 			if closest_ch3nh3_h_to_h2o is None:
 				continue
 
-			distances_h1_to_au = cdist([system.positions[h1_idx]], au_positions).flatten()
-			distances_h2_to_au = cdist([system.positions[h2_idx]], au_positions).flatten()
+			distance_n_to_o = np.linalg.norm(system.positions[ n_idx ] - system.positions[ o_idx ] )
+			# Exclude pairs with N-O distance > 4 A (max distance between the N of CH3NH3 and O of H2O molecules)
+			if distance_n_to_o > 4:
+				continue
 
-			min_h1_distance_to_au = np.min(distances_h1_to_au)
-			min_h2_distance_to_au = np.min(distances_h2_to_au)
+			distances_h1_to_au = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
+			distances_h2_to_au = cdist( [ system.positions[ h2_idx] ], au_positions ).flatten()
 
-			closest_au1_idx = au_indices[np.argmin(distances_h1_to_au)]
-			closest_au2_idx = au_indices[np.argmin(distances_h2_to_au)]
+			min_h1_distance_to_au = np.min( distances_h1_to_au )
+			min_h2_distance_to_au = np.min( distances_h2_to_au )
 
-			distance_n_to_o = np.linalg.norm(system.positions[n_idx] - system.positions[o_idx])
+			closest_au1_idx = au_indices[ np.argmin( distances_h1_to_au ) ]
+			closest_au2_idx = au_indices[ np.argmin( distances_h2_to_au ) ]
 
 			distances_of_ch3nh3_h_to_o = {}
 			for h_idx, dist in all_distances_to_o.items():
-				split_distance = dist.split('\t')[1]
+				split_distance = dist.split('\t')[ 1 ]
 				distances_of_ch3nh3_h_to_o[h_idx] = f"H:{h_idx}-O:{o_idx}= {split_distance}"
 
 			molecule_results.append({
@@ -586,12 +595,14 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 				"Distances of CH3NH3-H to O": distances_of_ch3nh3_h_to_o
 			})
 
-		molecule_results.sort(key=lambda x: float(x["H1-Au1"].split('= ')[1]))
-		final_results.extend(molecule_results)
+		molecule_results.sort( key=lambda x: float(x[ "H1-Au1" ].split( '= ' )[ 1 ] ) )
+		final_results.extend( molecule_results )
+
 		if to_print == "True":
 			for result in molecule_results:
-				print(result)
+				print( result )
 			print("\n")
+
 	return final_results
 
 if __name__ == "__main__":

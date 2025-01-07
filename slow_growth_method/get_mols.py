@@ -386,41 +386,43 @@ def get_CH3NH3_mols( poscar, threshold = 1.2, to_print = "False" ):
 #CH3NH3 molecules within the surface threshold
 ##For CH3NH3 dissociation (best)
 #CH3NH3 -> CH3NH2 + H*
-def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold = 3.6, to_print = "False" ):
+def get_CH3NH3_within_surface_threshold(poscar, CH3NH3_mols, to_print="False"):
 	system = read( poscar )
-	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
+	au_indices = [ i for i, atom in enumerate( system) if atom.symbol == "Au"]
 	au_positions = system.positions[ au_indices ]
 
-	CH3NH3_close_to_electrode = list()
 	results = list()
 
 	for mol in CH3NH3_mols:
 		N_idx, H1_N, H2_N, H3_N, C_idx, H1_C, H2_C, H3_C = mol
-		
 		NH3_H_indices = [ H1_N, H2_N, H3_N ]
 		NH3_H_positions = system.positions[ NH3_H_indices ]
 
 		distances_to_Au = cdist( NH3_H_positions, au_positions )
-		min_dist_idx = np.argmin( distances_to_Au )
-		min_distance = distances_to_Au.flatten()[ min_dist_idx ]
+		h_results = list()
 
-		if min_distance < distance_threshold:
-			closest_H_idx = NH3_H_indices[ min_dist_idx // len( au_indices ) ]
-			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
+		for idx, H_idx in enumerate( NH3_H_indices ):
+			h_distances_to_Au = distances_to_Au[ idx ]
+			closest_au_idx = np.argmin( h_distances_to_Au )
+			closest_distance = h_distances_to_Au[ closest_au_idx ]
 
-			results.append((
-				min_distance,
-				[N_idx, H1_N, H2_N, H3_N, C_idx, H1_C, H2_C, H3_C],
-				closest_H_idx,
-				closest_Au_idx
-			))
-			CH3NH3_close_to_electrode.append( mol )
+			h_results.append( ( closest_distance, H_idx, au_indices[ closest_au_idx ] ) )
 
-	results.sort(key = lambda x: x[ 0 ] )
+		h_results.sort( key=lambda x: x[0] )  # Sort H results by distance
+		results.append( (mol, h_results) )
+
 	if to_print == "True":
-		for distance, mol, closest_H_idx, closest_Au_idx in results:
-			print( f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}, {mol[5]}, {mol[6]}, {mol[7]}] \t" f"H(N): {closest_H_idx} \t" f"Au: {closest_Au_idx} \t" f"Dist: {round( distance, 3 ) }" )
-	return CH3NH3_close_to_electrode
+		for mol, h_results in results:
+			for dist, H_idx, Au_idx in h_results:
+				print(
+					f"[{mol[0]}, {mol[1]}, {mol[2]}, {mol[3]}, {mol[4]}, {mol[5]}, {mol[6]}, {mol[7]}] \t"
+					f"H(N): {H_idx} \t"
+					f"Au: {Au_idx} \t"
+					f"Dist: {round(dist, 3)}"
+				)
+			print() 
+	return results
+
 
 #Get H2O mols in the CH3NH3 hydration shell 
 #For shuttling
@@ -602,4 +604,4 @@ def get_CH3NH3_hydration_shell_shuttling( poscar, H2O_mols, CH3NH3_molecules, di
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
-	get_non_CH3NH3_hydration_shell( "POSCAR", H2O_mols, CH3NH3_mols, to_print = "True" )
+	get_CH3NH3_within_surface_threshold( "POSCAR", CH3NH3_mols, to_print = "True" )

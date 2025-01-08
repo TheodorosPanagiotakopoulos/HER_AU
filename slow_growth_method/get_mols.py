@@ -427,7 +427,7 @@ def get_CH3NH3_within_surface_threshold(poscar, CH3NH3_mols, to_print="False"):
 #Get H2O mols in the CH3NH3 hydration shell 
 #For shuttling
 #For H2O -> OH + H* if H of H2O is close to electrode
-def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold=4.0, to_print="False"):
+def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, to_print="False"):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -483,7 +483,7 @@ def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_thre
 
 #H2O molecules that not belong to CH3NH3 hydration shel
 #H2O -> OH + H*
-def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold=4.0, to_print="False"):
+def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, to_print="False"):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -531,7 +531,7 @@ def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_
 
 #H2O molecules that belong to NH4 hydration shell
 #For shuttling
-def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold=2.6, to_print="False"):
+def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 2.6, to_print="False"):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -606,4 +606,4 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	CH3NH3_mols = get_CH3NH3_mols( "POSCAR" )
-	get_CH3NH3_within_surface_threshold( "POSCAR", CH3NH3_mols, to_print = "True" )
+	get_CH3NH3_hydration_shell( "POSCAR", H2O_mols, CH3NH3_mols, to_print = "True" )

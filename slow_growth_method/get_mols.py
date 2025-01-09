@@ -293,68 +293,75 @@ def get_non_NH4_hydration_shell(poscar, H2O_mols, NH4_molecules, distance_thresh
 
 #H2O molecules that belong to NH4 hydration shell
 #For shuttling
-def get_NH4_hydration_shell_shuttling(poscar, H2O_mols, NH4_molecules, distance_threshold=2.6, to_print="False"):
-    system = read( poscar )
-    au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
-    au_positions = system.positions[ au_indices ]
+def get_NH4_hydration_shell_shuttling( poscar, H2O_mols, NH4_molecules, distance_threshold = 2.6, to_print="False" ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+	au_positions = system.positions[ au_indices ]
 
-    final_results = list()
+	final_results = list()
 
-    for nh4 in NH4_molecules:
-        n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx = nh4
-        NH4_H_indices = [ h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx ]
+	for nh4 in NH4_molecules:
+		n_idx, h1_nh4, h2_nh4, h3_nh4, h4_nh4 = nh4
+		NH4_H_indices = [ h1_nh4, h2_nh4, h3_nh4, h4_nh4 ]
 
-        molecule_results = list()
+		molecule_results = list()
 
-        for h2o in H2O_mols:
-            h1_idx, o_idx, h2_idx = h2o
+		for h2o in H2O_mols:
+			h1_idx, o_idx, h2_idx = h2o
 
-            closest_nh4_h_to_h2o = None
-            min_distance_to_nh4_h = float( 'inf' )
-            all_distances_to_o = {}
+			distance_n_to_o = np.linalg.norm( system.positions[ n_idx ] - system.positions[ o_idx ] )
 
-            for h_nh4_idx in NH4_H_indices:
-                distance = np.linalg.norm(system.positions[ o_idx ] - system.positions[ h_nh4_idx ] )
-                all_distances_to_o[ h_nh4_idx ] = f"{h_nh4_idx}\t{round(distance, 3)}"
-                if distance < distance_threshold and distance < min_distance_to_nh4_h:
-                    closest_nh4_h_to_h2o = h_nh4_idx
-                    min_distance_to_nh4_h = distance
+			# Check if the N-O distance is within 4 A
+			if distance_n_to_o > 4:
+				continue
 
-            if closest_nh4_h_to_h2o is None:
-                continue
+			closest_nh4_h_to_h2o = None
+			min_distance_to_nh4_h = float( 'inf' )
+			all_distances_to_o = {}
 
-            distances_h1_to_au = cdist([system.positions[ h1_idx ] ], au_positions ).flatten()
-            distances_h2_to_au = cdist([system.positions[ h2_idx ] ], au_positions ).flatten()
+			for h_nh4_idx in NH4_H_indices:
+				distance = np.linalg.norm( system.positions[ o_idx ] - system.positions[ h_nh4_idx ] )
+				all_distances_to_o[ h_nh4_idx ] = f"{h_nh4_idx}\t{round(distance, 3)}"
+				if distance < distance_threshold and distance < min_distance_to_nh4_h:
+					closest_nh4_h_to_h2o = h_nh4_idx
+					min_distance_to_nh4_h = distance
 
-            min_h1_distance_to_au = np.min( distances_h1_to_au )
-            min_h2_distance_to_au = np.min( distances_h2_to_au )
+			if closest_nh4_h_to_h2o is None and distance_n_to_o > 4:
+				continue
 
-            closest_au1_idx = au_indices[ np.argmin( distances_h1_to_au ) ]
-            closest_au2_idx = au_indices[ np.argmin( distances_h2_to_au ) ]
+			distances_h1_to_au = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
+			distances_h2_to_au = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
 
-            distance_n_to_o = np.linalg.norm( system.positions[ n_idx ] - system.positions[ o_idx ] )
+			min_h1_distance_to_au = np.min( distances_h1_to_au )
+			min_h2_distance_to_au = np.min( distances_h2_to_au )
 
-            distances_of_nh4_h_to_o = {}
-            for h_idx, dist in all_distances_to_o.items():
-                split_distance = dist.split('\t')[ 1 ]
-                distances_of_nh4_h_to_o[ h_idx ] = f"H:{h_idx}-O:{o_idx}= {split_distance}"
+			closest_au1_idx = au_indices[ np.argmin( distances_h1_to_au ) ]
+			closest_au2_idx = au_indices[ np.argmin( distances_h2_to_au ) ]
 
-            molecule_results.append({
-                "[N, H1, H2, H3, H4]": [ n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx ],
-                "[H1, O, H2]": [ h1_idx, o_idx, h2_idx ],
-                "H1-Au1": f"{h1_idx} - {closest_au1_idx} = {round(min_h1_distance_to_au, 3)}",
-                "H2-Au2": f"{h2_idx} - {closest_au2_idx} = {round(min_h2_distance_to_au, 3)}",
-                "N-O Distance": round( distance_n_to_o, 3 ),
-                "Distances of NH4-H to O": distances_of_nh4_h_to_o
-            })
+			distances_of_nh4_h_to_o = {}
+			for h_idx in NH4_H_indices:
+				if h_idx in all_distances_to_o:
+					split_distance = all_distances_to_o[ h_idx ].split( '\t' )[ 1 ]
+					distances_of_nh4_h_to_o[ h_idx ] = f"H:{h_idx}-O:{o_idx}= {split_distance}"
 
-        molecule_results.sort( key=lambda x: float( x[ "H1-Au1" ].split( '= ' )[ 1 ] ) )
-        final_results.extend( molecule_results )
-        if to_print == "True":
-            for result in molecule_results:
-                print( result )
-            print("\n")
-    return final_results
+			molecule_results.append({
+				"[N, H1, H2, H3, H4]": [ n_idx, h1_nh4, h2_nh4, h3_nh4, h4_nh4],
+				"[H1, O, H2]": [h1_idx, o_idx, h2_idx ],
+				"H1-Au1": f"{h1_idx} - {closest_au1_idx} = {round(min_h1_distance_to_au, 3)}",
+				"H2-Au2": f"{h2_idx} - {closest_au2_idx} = {round(min_h2_distance_to_au, 3)}",
+				"N-O Distance": round( distance_n_to_o, 3 ),
+				"Distances of NH4-H to O": distances_of_nh4_h_to_o
+			})
+
+		molecule_results.sort( key=lambda x: float(x[ "H1-Au1" ].split( '= ' )[ 1 ] ) )
+		final_results.extend( molecule_results )
+
+		if to_print == "True":
+			for result in molecule_results:
+				print( result )
+			print( "\n" )
+
+	return final_results
 
 
 ################################## CH3NH3 molecules ##################################
@@ -604,4 +611,4 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )
 	NH4_mols = get_NH4_mols( "POSCAR" )
-	get_non_NH4_hydration_shell( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )
+	get_NH4_hydration_shell_shuttling( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )

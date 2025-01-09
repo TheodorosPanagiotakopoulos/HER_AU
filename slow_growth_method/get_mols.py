@@ -190,7 +190,7 @@ def get_NH4_within_surface_threshold(poscar, NH4_mols, distance_threshold = 5.6,
 
 #H2O molecules that belong to NH4 hydration shell
 #For H2O dissociation ( H2O -> OH + H* ) if H of H2O is close to electrode
-def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold = 2.9, to_print = "False" ):
+def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold = 3.1, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]

@@ -59,9 +59,39 @@ def add_to_database( loc, key, folders ):
 		db_add( database, key, name, input )
 	db_save( database, 'database_theo.js' )
 
+#for relaxed systems and MD with and without Voltage for reaching stability
+def add_to_database_v2( loc, key ):
+	db_add_key( database, key )
+	for name in [ x for x in os.listdir( convert( loc ) ) if os.path.isdir( convert( loc ) +  "/" + x )  ]:
+		print( name )
+		path = loc + name
+		input = { 'path': path, 'note': "" }
+		db_add( database, key, name, input )
+	db_save( database, 'database_theo.js' )
 
 if __name__ == "__main__":
 	database = {}        
+	
+	Na_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/Na"
+	add_to_database_v2( Na_relax, "Na_relax" )
+
+	NH4_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/NH4"
+	add_to_database_v2( NH4_relax, "NH4_relax" )
+
+	CH3NH3_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/CH3NH3"
+	add_to_database_v2( CH3NH3_relax, "CH3NH3_relax" )
+
+
+	Na_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/Na"
+	add_to_database_v2( Na_MD, "Na_MD" )
+
+	NH4_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/NH4"
+	add_to_database_v2( NH4_MD, "NH4_MD" )
+
+	CH3NH3_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/CH3NH3"
+	add_to_database_v2( CH3NH3_MD, "CH3NH3_MD" )
+
+
 
 	base_Na = "~/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/"
 	Na_NashMap = { "A" : "/free_H2O_splitting/",  "B" :  "/H2O_from_hydration_shell_splitting/" }

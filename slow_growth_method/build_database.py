@@ -63,15 +63,14 @@ def add_to_database( loc, key, folders ):
 def add_to_database_v2( loc, key ):
 	db_add_key( database, key )
 	for name in [ x for x in os.listdir( convert( loc ) ) if os.path.isdir( convert( loc ) +  "/" + x )  ]:
-		print( name )
 		path = loc + name
 		input = { 'path': path, 'note': "" }
 		db_add( database, key, name, input )
 	db_save( database, 'database_theo.js' )
 
 if __name__ == "__main__":
-	database = {}        
-	
+	database = {}
+
 	Na_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/Na"
 	add_to_database_v2( Na_relax, "Na_relax" )
 

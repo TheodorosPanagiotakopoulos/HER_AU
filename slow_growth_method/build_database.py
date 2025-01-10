@@ -69,8 +69,8 @@ def add_to_database_v2( loc, key ):
 	db_save( database, 'database_theo.js' )
 
 if __name__ == "__main__":
-	database = {}
-
+	database = {}        
+	
 	Na_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/Na"
 	add_to_database_v2( Na_relax, "Na_relax" )
 
@@ -79,7 +79,6 @@ if __name__ == "__main__":
 
 	CH3NH3_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/CH3NH3"
 	add_to_database_v2( CH3NH3_relax, "CH3NH3_relax" )
-
 
 	Na_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/Na"
 	add_to_database_v2( Na_MD, "Na_MD" )
@@ -90,7 +89,14 @@ if __name__ == "__main__":
 	CH3NH3_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/CH3NH3"
 	add_to_database_v2( CH3NH3_MD, "CH3NH3_MD" )
 
+	Na_MD_voltage = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD_voltage/Na"
+	add_to_database_v2( Na_MD_voltage, "Na_MD_voltage" )
 
+	NH4_MD_voltage = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD_voltage/NH4"
+	add_to_database_v2( NH4_MD_voltage, "NH4_MD_voltage" )
+
+	CH3NH3_MD_voltage = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD_voltage/CH3NH3"
+	add_to_database_v2( CH3NH3_MD_voltage, "CH3NH3_MD_voltage" )
 
 	base_Na = "~/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/"
 	Na_NashMap = { "A" : "/free_H2O_splitting/",  "B" :  "/H2O_from_hydration_shell_splitting/" }
@@ -115,7 +121,7 @@ if __name__ == "__main__":
 	CH3NH3_HashMap = { "A" : "/H2O_splitting_from_CH3NH3_hydration_shell/",  "B" :  "/H2O_splitting_NOT_from_CH3NH3_hydration_shell/", "C" : "/CH3NH3_splitting/", "D" : "/shuttling/" }
 	CH3NH3_key_HashMap = { "A" : "_CH3NH3_H2O_dissociation_from_hydration_shell", "B" : "_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", "C" :"_CH3NH3_spliting", "D" : "_CH3NH3_shuttling" }
 	CH3NH3_name = "_CH3NH3_40_H2O_v"
-	for i in [ 1, 3 ]:
+	for i in [ 1, 3, 5 ]:
 		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "A" ], str( i ) + CH3NH3_key_HashMap[ "A" ],  str( i ) + CH3NH3_name )
 		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "B" ], str( i ) + CH3NH3_key_HashMap[ "B" ],  str( i ) + CH3NH3_name )
 		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "C" ], str( i ) + CH3NH3_key_HashMap[ "C" ],  str( i ) + CH3NH3_name )

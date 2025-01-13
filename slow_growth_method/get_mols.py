@@ -607,6 +607,35 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 
 	return final_results
 
+################################## Get status ##################################
+
+#Finds the index of the Hydrogen (H) atom in an ICONST file that is moving toward a specified surface.
+def get_H_from_ICONST( iconst, to_print = "False"):
+	last_line = list()
+	with open( iconst ) as file:
+		lines = [ line.rstrip() for line in file ]
+	last_line.append( lines[ 0 ] )
+	H_idx = last_line[ 0 ].split( " " )[ -2 ]
+	if to_print == "True": 
+		print( "H index: ", H_idx ) 
+	return int( H_idx )
+
+#check if the H atom from ICONST indeed moved to Au
+def get_status( poscar, threshold_distance = 2.0 ):
+	result = False
+	system = read( poscar )
+	distance_H_to_Au = list()
+	au_indices = [ i for i, j in enumerate( system ) if j.symbol == "Au" ]
+	au_positions = system.positions[ au_indices ]
+	H_idx = get_H_from_ICONST( "ICONST" )
+	for au_idx in au_indices:
+		distance_H_to_Au.append( np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_idx ] ) )
+	min_H_Au_dist = round( min( distance_H_to_Au ), 3 )  
+	if min_H_Au_dist < threshold_distance:
+		result = True
+	print( result, min_H_Au_dist )
+	return result
+
 
 if __name__ == "__main__":
 	H2O_mols = get_H2O_mols( "POSCAR" )

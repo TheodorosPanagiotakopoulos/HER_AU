@@ -633,7 +633,6 @@ def get_status( poscar, threshold_distance = 2.0 ):
 	min_H_Au_dist = round( min( distance_H_to_Au ), 3 )  
 	if min_H_Au_dist < threshold_distance:
 		result = True
-	print( result, min_H_Au_dist )
 	return result
 
 

@@ -618,7 +618,7 @@ def get_H_from_ICONST( iconst, to_print = "False"):
 	H_idx = last_line[ 0 ].split( " " )[ -2 ]
 	if to_print == "True": 
 		print( "H index: ", H_idx ) 
-	return int( H_idx )
+	return int( H_idx ) - 1
 
 #check if the H atom from ICONST indeed moved to Au
 def get_status( poscar, threshold_distance = 2.0 ):

@@ -1,17 +1,14 @@
-import datetime
 from ase.io import read, write
 from ase.visualize import view
+from dlePy.vasp.chgcar import read_chgcar, write_chgcar
 from ase.build import add_adsorbate
 import numpy as np
 
-def read_chgcar( INDATA, CONTCAR = "CONTCAR" ):
-	print ( "Input data: ", INDATA )
-	print ( "Read ", INDATA )
-	print ( datetime.datetime.now() )
-	rho = VaspChargeDensity( INDATA )
-	print ( datetime.datetime.now() )
-	return rho
-
+def rotate_group( atoms, group, axis, angle, center ):
+    subsys = atoms[ group ]
+    subsys.rotate( angle, axis, center, rotate_cell = False )
+    atoms.positions[ group ] = subsys.positions
+    return atoms
 
 # Function to generate the "ICONST" file for collective coordinates
 #atoms_list: A list of lists, where each sublist contains two atom indices that define a collective coordinate.
@@ -25,16 +22,15 @@ def get_ICONST( atoms_list, choice = None ):
 		else:
 			file.write( "S 1 0 0 0 \n" )
 
-
 #Shift the entire system so that the atom at index N is centered in the XY-plane of the simulation cell.
 #system (Atoms): The atomic system (structure) read using ASE, e.g., via `ase.io.read`.
-#N (int): Index of the atom to center. Typically, this is the index of an atom in the dissociating molecule (e.g., Oxygen in H2O or Nitrogen in a cation).
+#N (int): Index of the atom to center. Typically, this is the index of an atom in the dissociating molecule (e.g., Oxygen in H2O or Nitroge>
 def shift_center( system, N:int ):
 	if N < 0 or N >= len(system):
 		raise ValueError(f"Invalid atom index {N}. It must be between 0 and {len(system) - 1}.")
-	center = system[N].position
-	shift = -center + 0.5 * (system.cell[0] + system.cell[1])
-	shift[2] = 0
+	center = system[N].position  
+	shift = -center + 0.5 * (system.cell[0] + system.cell[1])  
+	shift[2] = 0  
 	for atom in system:
 		atom.position += shift
 	system.wrap()
@@ -57,17 +53,6 @@ def add_velocity( path_to_MD_CONTCAR ):
 	fout.close()
 	new_struc = read( "POSCAR" )
 	return new_struc
-
-#atoms (Atoms): The complete atomic structure.
-#group (list or array): Indices of atoms to be rotated.
-#axis (tuple or list): Rotation axis as a vector (e.g., (1, 0, 0)).
-#angle (float): Rotation angle (degrees or radians).
-#center (tuple or list): Point around which the rotation occurs.
-def rotate_group( atoms, group, axis, angle, center ):
-    subsys = atoms[ group ]
-    subsys.rotate( angle, axis, center, rotate_cell = False )
-    atoms.positions[ group ] = subsys.positions
-    return atoms
 
 def change_atomic_number( system, lst ):
     for i in lst:
@@ -231,6 +216,25 @@ def move_symmetrically_cords(system, at, x_y_cords, atoms_to_move ):
 	for i in moving_atoms:
   		system[i].position[0] += system[at].position[0] - x_i
   		system[i].position[1] += system[at].position[1] - y_i
+	return system
+
+#This function moves atoms symmetrucally on the x-y. It is the same with move_symmetrically
+#but instead of a surface atom it gets the new cordinates in a list.
+#system =  the POSCAR or CONTCAR file
+#at = the index of an atom of the molecule we want to move. All other atoms will be moved in repsect to this atom
+#x_y_z_cords = the new cordinates of which the at atom will be moved. It is a list. First element is x cordinate, second element is the y cordinate, and last element is the z cordinate
+#atoms_to_move = a list with the atoms we want to move
+def move_symmetrically_volume( system, at, x_y_z_cords, atoms_to_move ):
+	x_i = system[ at ].position[ 0 ]
+	y_i = system[ at ].position[ 1 ]
+	z_i = system[ at ].position[ 2 ]
+	for i in range( 0, 3 ):
+		system[ at ].position[i] = x_y_z_cords[ i ]
+	moving_atoms = [i for i in atoms_to_move if i != at]
+	for i in moving_atoms:
+		system[i].position[ 0 ] += system[at].position[0] - x_i
+		system[i].position[ 1 ] += system[at].position[1] - y_i
+		system[i].position[ 2 ] += system[at].position[1] - z_i
 	return system
 
 #This function moves two different systems of atoms symmetrically on the x-y plane.

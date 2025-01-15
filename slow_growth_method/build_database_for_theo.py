@@ -1,11 +1,6 @@
 import json as js
 import os
 import getpass
-import numpy as np
-from ase.io import read
-from dlePy.jobmon.monitor import if_vasp_done
-from dlePy.vasp.getdata import get_energy
-from dlePy.vasp.tpot import cal_omega, parse_outcar, get_NELECT, get_pot 
 import get_mols
 
 username=getpass.getuser()

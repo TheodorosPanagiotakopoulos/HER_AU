@@ -57,7 +57,7 @@ def add_to_database( loc, key, folders ):
 		path = loc + name
 		input = { 'path': path, 'note': "" }
 		db_add( database, key, name, input )
-	db_save( database, 'database_theo.js' )
+	db_save( database, 'database_for_duy.js' )
 
 #for relaxed systems and MD with and without Voltage for reaching stability
 def add_to_database_v2( loc, key ):
@@ -66,7 +66,7 @@ def add_to_database_v2( loc, key ):
 		path = loc + name
 		input = { 'path': path, 'note': "" }
 		db_add( database, key, name, input )
-	db_save( database, 'database_theo.js' )
+	db_save( database, 'database_for_duy.js' )
 
 if __name__ == "__main__":
 	database = {}        

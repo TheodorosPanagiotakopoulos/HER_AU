@@ -15,6 +15,13 @@ def convert( path ):
 def split_path( path_to_SG_calculation ):
         return path_to_SG_calculation.split( "/" )
 
+def sort_dict( dictionary ):
+	keys = list( dictionary.keys() )
+	values = list( dictionary.values() )
+	sorted_value_index = np.argsort( values )
+	sorted_dict = { keys[ i ]: values[ i ] for i in sorted_value_index }
+	return sorted_dict
+
 def flatten_matrix( matrix ):
 	flat_list = list()
 	for i in matrix:

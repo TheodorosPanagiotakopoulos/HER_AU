@@ -7,14 +7,19 @@ import numpy as np
 import json
 import getpass
 
-
+# Replaces '~' in the given path with the user's home directory (/home/<username>)
+# path: The file path that may start with '~'
 def convert( path ):
 	username=getpass.getuser()
 	return path.replace( '~', '/home/' + username )
 
+# Splits a file path into its components using "/" as the delimiter.
+# path_to_SG_calculation: The full file path to be split into individual directory or file components.
 def split_path( path_to_SG_calculation ):
         return path_to_SG_calculation.split( "/" )
 
+# Sorts a dictionary by its values in ascending order and returns a new sorted dictionary.
+# dictionary: The dictionary to be sorted, with keys and their corresponding values.
 def sort_dict( dictionary ):
 	keys = list( dictionary.keys() )
 	values = list( dictionary.values() )
@@ -22,12 +27,16 @@ def sort_dict( dictionary ):
 	sorted_dict = { keys[ i ]: values[ i ] for i in sorted_value_index }
 	return sorted_dict
 
+# Flattens a 2D matrix (list of lists) into a single list containing all elements in row-wise order.
+# matrix: A 2D list (matrix) to be flattened into a 1D list.
 def flatten_matrix( matrix ):
 	flat_list = list()
 	for i in matrix:
 		flat_list.extend( i )
 	return flat_list
 
+# Retrieves a list of all directories or files in the current directory that match the pattern "RUN*".
+# Returns: A list of matching items or an empty list if no matches are found.
 def get_RUNs():
 		runs = glob.glob( "RUN*" )
 		if runs:
@@ -35,6 +44,8 @@ def get_RUNs():
 		else:
 			return []
 
+# Processes a "REPORT" file or "REPORT.gz" file to extract and parse lines containing "cc" and "b_m".
+# Returns: Two lists extracted from the file - one containing specific columns from lines with "cc" and another with "b_m".
 def get_cc_bm():
 	files = glob.glob( "REPORT*" )
 	if "REPORT" in files:
@@ -55,6 +66,9 @@ def get_cc_bm():
 	#print( df_bm.to_string() )
 	return list( df_cc[ 3 ] ), list( df_bm[ 1 ] )
 
+# Collects and processes "cc" and "b_m" data from a specified directory containing SG calculations.
+# path_to_SG_calculation: The path to the directory containing SG calculation data.
+# Returns: Two lists of floats - one for "cc" and another for "b_m". Returns (None, None) if no valid data is found.
 def collect_cc_and_bm( path_to_SG_calculation ):
 	if os.path.exists( path_to_SG_calculation ):
 		os.chdir( path_to_SG_calculation )
@@ -83,6 +97,9 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 	else:
 		print( "Path not found" )
 
+# Computes the free energy (tg) based on the "cc" and "b_m" data from a specified SG calculation directory.
+# path_to_SG_calculation: The path to the directory containing SG calculation data.
+# Returns: Two lists - one for "cc" (cumulative charge) and another for "tg" (free energy). Returns (None, None) if no valid data is found.
 def get_free_energy( path_to_SG_calculation ):
 	tg = [ 0.0 ]
 	cc, b_m = collect_cc_and_bm( path_to_SG_calculation )
@@ -93,11 +110,9 @@ def get_free_energy( path_to_SG_calculation ):
 		tg.append( tg[ -1 ] + gg )
 	return cc, tg
 
-def load_database( database_file ):
-	with open( database_file, "r" ) as file:
-		database = json.load( file )
-	return database
-
+# Calculates the energy barrier from the free energy data of an SG calculation directory.
+# path_to_SG_calculation: The path to the directory containing SG calculation data.
+# Returns: The energy barrier (rounded to 2 decimal places) or None if free energy data is unavailable.
 def get_barrier( path_to_SG_calculation ):
 	#do not allow printing from get free_energy() 
     original_stdout = sys.stdout
@@ -113,6 +128,10 @@ def get_barrier( path_to_SG_calculation ):
             sys.stdout.close()
             sys.stdout = original_stdout
 
+# Updates a dictionary with energy barrier values for a specific SG calculation path.
+# path_to_SG_calculation: The path to the SG calculation directory.
+# barriers_dict: The dictionary to store barrier values, keyed by the directory path. It is initally empty
+# Returns: The updated dictionary with the barrier value for the specified path.
 def get_barriers_to_dictionary( path_to_SG_calculation, barriers_dict ):
 	os.chdir( path_to_SG_calculation )
 	path_to_list = split_path( path_to_SG_calculation )
@@ -125,6 +144,20 @@ def get_barriers_to_dictionary( path_to_SG_calculation, barriers_dict ):
 	#print( barriers_dict )
 	return barriers_dict
 
+################################# FROM DATABASE #################################
+
+# Loads a JSON database from a specified file.
+# database_file: The path to the JSON file containing the database.
+# Returns: The loaded database as a Python dictionary.
+def load_database( database_file ):
+	with open( database_file, "r" ) as file:
+		database = json.load( file )
+	return database
+
+# Extracts and filters barriers from a database based on a specific key, only considering entries marked as "Good".
+# database: The database containing barrier information.
+# val: The key in the database to filter and process.
+# Returns: A sorted dictionary of barriers with keys as "barrier_<name>" and values as the barrier values.
 def get_barrier_from_db( database, val ):
 	filtered_data = {}
 	for key, value in database[ val ].items():

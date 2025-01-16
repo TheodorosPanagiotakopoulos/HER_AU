@@ -621,22 +621,21 @@ def get_H_from_ICONST( iconst, to_print = "False"):
 	return int( H_idx ) - 1
 
 #check if the H atom from ICONST indeed moved to Au
-def get_status( poscar, threshold_distance = 2.0 ):
+def get_status( contcar, iconst, threshold_distance = 2.0 ):
 	result = False
-	system = read( poscar )
+	system = read( contcar )
 	distance_H_to_Au = list()
 	au_indices = [ i for i, j in enumerate( system ) if j.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
-	H_idx = get_H_from_ICONST( "ICONST" )
+	H_idx = get_H_from_ICONST( iconst )
 	for au_idx in au_indices:
 		distance_H_to_Au.append( np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_idx ] ) )
 	min_H_Au_dist = round( min( distance_H_to_Au ), 3 )  
 	if min_H_Au_dist < threshold_distance:
 		result = True
+	#print( result, min_H_Au_dist )
 	return result
 
 
 if __name__ == "__main__":
-	H2O_mols = get_H2O_mols( "POSCAR" )
-	NH4_mols = get_NH4_mols( "POSCAR" )
 	get_NH4_hydration_shell_shuttling( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )

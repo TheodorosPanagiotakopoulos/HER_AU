@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import json
 import getpass
+from ase.io import read
 
 # Replaces '~' in the given path with the user's home directory (/home/<username>)
 # path: The file path that may start with '~'
@@ -43,6 +44,43 @@ def get_RUNs():
 			return runs
 		else:
 			return []
+
+# Extracts the "H" index from the first line of an ICONST file.
+# iconst: The path to the ICONST file to process.
+# to_print: A flag (string) to control whether the "H index" is printed ("True" for printing, default is "False").
+# Returns: The "H" index as an integer (adjusted to zero-based indexing).
+def get_H_from_ICONST( iconst, to_print = "False"):
+	last_line = list()
+	with open( iconst ) as file:
+		lines = [ line.rstrip() for line in file ]
+	last_line.append( lines[ 0 ] )
+	H_idx = last_line[ 0 ].split( " " )[ -2 ]
+	if to_print == "True":
+		print( "H index: ", H_idx )
+	return int( H_idx ) - 1
+
+# Calculates the minimum initial distance between the "H" atom and any "Au" atom in the system.
+# path_to_SG_calculation: The path to the SG calculation directory.
+# to_print: A flag (string) to control whether the minimum distance is printed ("True" for printing, default is "False").
+# Returns: The minimum distance between the "H" atom and any "Au" atom, rounded to 2 decimal places.
+def get_initial_H_Au_distance( path_to_SG_calculation, to_print = "False" ):
+	distance_H_to_Au = list()
+	os.chdir( path_to_SG_calculation )
+	runs = get_RUNs()
+	H_idx = get_H_from_ICONST( "ICONST" )
+	if not runs:
+		system = read( "POSCAR" )
+	else:
+		system = read( "RUN1/POSCAR" )
+	au_indices = [ i for i, j in enumerate( system ) if j.symbol == "Au" ]
+	for au_idx in au_indices:
+		distance_H_to_Au.append( np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_idx ] ) )
+	min_H_Au_dist = round( min( distance_H_to_Au ), 2 )
+	if to_print == "True":
+		print( "min_H_Au_dist: ", min_H_Au_dist )	
+	return min_H_Au_dist
+
+################################# SLOW GROWTH METHOD #################################
 
 # Processes a "REPORT" file or "REPORT.gz" file to extract and parse lines containing "cc" and "b_m".
 # Returns: Two lists extracted from the file - one containing specific columns from lines with "cc" and another with "b_m".
@@ -163,6 +201,7 @@ def get_barrier_from_db( database, val ):
 	for key, value in database[ val ].items():
 		if value[ "note" ] == "Good":
 			filtered_data[  "barrier_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
+			filtered_data[  "Dist(H-Au)_" + value[ "path" ].split("/")[ -1 ] ] = get_initial_H_Au_distance( convert( value[ "path" ] ) )
 	sorted_dict = sort_dict( filtered_data )
 	#for key, value in sorted_dict.items():
 	#	print( key, value )
@@ -177,5 +216,5 @@ if __name__ == "__main__":
 
 	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell" )
 	print( "Na_1_No_hyd: ", Na_1_No_hyd )
-
-
+	
+	#get_initial_H_Au_distance( "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v1", to_print = "True" )

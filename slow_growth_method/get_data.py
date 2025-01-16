@@ -4,6 +4,13 @@ import glob
 import sys
 import pandas as pd
 import numpy as np
+import json
+import getpass
+
+
+def convert( path ):
+	username=getpass.getuser()
+	return path.replace( '~', '/home/' + username )
 
 def split_path( path_to_SG_calculation ):
         return path_to_SG_calculation.split( "/" )

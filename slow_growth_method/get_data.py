@@ -93,7 +93,12 @@ def get_free_energy( path_to_SG_calculation ):
 		tg.append( tg[ -1 ] + gg )
 	return cc, tg
 
-def get_barriers( path_to_SG_calculation ):
+def load_database( database_file ):
+	with open( database_file, "r" ) as file:
+		database = json.load( file )
+	return database
+
+def get_barrier( path_to_SG_calculation ):
 	#do not allow printing from get free_energy() 
     original_stdout = sys.stdout
     sys.stdout = open(os.devnull, 'w')
@@ -120,6 +125,24 @@ def get_barriers_to_dictionary( path_to_SG_calculation, barriers_dict ):
 	#print( barriers_dict )
 	return barriers_dict
 
+def get_barrier_from_db( database, val ):
+	filtered_data = {}
+	for key, value in database[ val ].items():
+		if value[ "note" ] == "Good":
+			filtered_data[  "barrier_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
+	sorted_dict = sort_dict( filtered_data )
+	#for key, value in sorted_dict.items():
+	#	print( key, value )
+	return sorted_dict
+
 if __name__ == "__main__":
-	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v4"
-	d = get_barriers_to_dictionary( path, {} )
+	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
+	data = load_database( path + "database_for_theo.js" )
+
+	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell" )
+	print( "Na_1_hyd: ", Na_1_hyd )
+
+	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell" )
+	print( "Na_1_No_hyd: ", Na_1_No_hyd )
+
+

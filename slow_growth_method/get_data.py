@@ -203,11 +203,17 @@ def get_barrier_from_db( database, val, to_print = False ):
 	barriers = list()
 	distances = list()
 	for key, value in database[ val ].items():
+		#aux_key =""
 		if value[ "note" ] == "Good":
-			if value[ "path" ].split("/")[ -2 ] == "H2O_from_hydration_shell_splitting":
+			#print( value[ "path" ] )
+			if value[ "path" ].split("/")[ -2 ] == "H2O_from_hydration_shell_splitting" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_from_CH3NH3_hydration_shell":
 				aux_key = "hyd_shell"
-			elif value[ "path" ].split("/")[ -2 ] == "free_H2O_splitting":
+			elif value[ "path" ].split("/")[ -2 ] == "free_H2O_splitting" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_NOT_from_CH3NH3_hydration_shell":
 				aux_key = "NO_hyd_shell"
+			elif value[ "path" ].split("/")[ -2 ] == "CH3NH3_splitting":
+				aux_key = value[ "path" ].split("/")[ -2 ]
+			elif value[ "path" ].split("/")[ -2 ] == "shuttling":
+				aux_key = value[ "path" ].split("/")[ -2 ] + "_shuttling"
 			filtered_data[  "bar_" + aux_key + "_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
 			filtered_data[  "Dist(H-Au)_" + value[ "path" ].split("/")[ -1 ] ] = get_initial_H_Au_distance( convert( value[ "path" ] ) )
 	sorted_dict = sort_dict( filtered_data )
@@ -219,7 +225,7 @@ def get_barrier_from_db( database, val, to_print = False ):
 			distances.append( sorted_dict[ key ] )
 	data[ "CONF" ] = names
 	data[ "barrier" ] = barriers
-	data[ "distance" ] = distances
+	data[ "H-Au_distance" ] = distances
 	if to_print == True:
 		print( data.to_string() )
 	return data 
@@ -228,10 +234,22 @@ if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )
 
-	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
 
-	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
 	
-	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", to_print = True )
 
-	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	
+	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+
+	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+
+	CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
+	
+	CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	
+	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
+
+	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )

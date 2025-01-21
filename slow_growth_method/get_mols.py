@@ -611,11 +611,11 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 
 #Finds the index of the Hydrogen (H) atom in an ICONST file that is moving toward a specified surface.
 def get_H_from_ICONST( iconst, to_print = "False"):
-	last_line = list()
+	first_line = list()
 	with open( iconst ) as file:
 		lines = [ line.rstrip() for line in file ]
-	last_line.append( lines[ 0 ] )
-	H_idx = last_line[ 0 ].split( " " )[ -2 ]
+	first_line.append( lines[ 0 ] )
+	H_idx = first_line[ 0 ].split( " " )[ -2 ]
 	if to_print == "True": 
 		print( "H index: ", H_idx ) 
 	return int( H_idx ) - 1

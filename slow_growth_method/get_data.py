@@ -195,26 +195,43 @@ def load_database( database_file ):
 # Extracts and filters barriers from a database based on a specific key, only considering entries marked as "Good".
 # database: The database containing barrier information.
 # val: The key in the database to filter and process.
-# Returns: A sorted dictionary of barriers with keys as "barrier_<name>" and values as the barrier values.
-def get_barrier_from_db( database, val ):
+# Returns: A sorted dataframe of barriers with keys as "barrier_<name>" and values as the barrier values.
+def get_barrier_from_db( database, val, to_print = False ):
+	data = pd.DataFrame()
 	filtered_data = {}
+	names = list()
+	barriers = list()
+	distances = list()
 	for key, value in database[ val ].items():
 		if value[ "note" ] == "Good":
-			filtered_data[  "barrier_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
+			if value[ "path" ].split("/")[ -2 ] == "H2O_from_hydration_shell_splitting":
+				aux_key = "hyd_shell"
+			elif value[ "path" ].split("/")[ -2 ] == "free_H2O_splitting":
+				aux_key = "NO_hyd_shell"
+			filtered_data[  "bar_" + aux_key + "_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
 			filtered_data[  "Dist(H-Au)_" + value[ "path" ].split("/")[ -1 ] ] = get_initial_H_Au_distance( convert( value[ "path" ] ) )
 	sorted_dict = sort_dict( filtered_data )
-	#for key, value in sorted_dict.items():
-	#	print( key, value )
-	return sorted_dict
+	for key in sorted_dict:
+		if key.startswith( "bar" ):
+			names.append( key )
+			barriers.append( sorted_dict[ key ] )
+		else:
+			distances.append( sorted_dict[ key ] )
+	data[ "CONF" ] = names
+	data[ "barrier" ] = barriers
+	data[ "distance" ] = distances
+	if to_print == True:
+		print( data.to_string() )
+	return data 
 
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )
 
-	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell" )
-	print( "Na_1_hyd: ", Na_1_hyd )
+	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
 
-	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell" )
-	print( "Na_1_No_hyd: ", Na_1_No_hyd )
+	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
 	
-	#get_initial_H_Au_distance( "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/Na/1_Na/free_H2O_splitting/1_Na_40_H2O_v1", to_print = "True" )
+	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+
+	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )

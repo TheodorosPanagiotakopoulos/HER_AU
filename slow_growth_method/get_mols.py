@@ -608,6 +608,12 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 	return final_results
 
 ################################## Get status ##################################
+# Retrieves a list of all directories or files in the current directory that match the pattern "RUN*".
+# Returns: A list of matching items or an empty list if no matches are found.
+def get_RUNs( path_to_simulation ):
+	path_to_simulation = os.path.normpath(path_to_simulation )
+	runs = glob.glob( os.path.join( path_to_simulation, "RUN*" ) )
+	return runs
 
 #Finds the index of the Hydrogen (H) atom in an ICONST file that is moving toward a specified surface.
 def get_H_from_ICONST( iconst, to_print = False ):
@@ -649,18 +655,34 @@ def get_H_from_ICONST( iconst, to_print = False ):
 def get_status( contcar, iconst, threshold_distance = 2.0 ):
 	result = False
 	system = read( contcar )
-	distance_H_to_Au = list()
+	path_to_simulation = os.path.dirname( contcar )
+	runs = get_RUNs( path_to_simulation )
+	if not runs:
+		initial_system = read( path_to_simulation + "/POSCAR")
+	else:
+		initial_system = read( path_to_simulation + "/RUN1/POSCAR")
 	au_indices = [ i for i, j in enumerate( system ) if j.symbol == "Au" ]
-	au_positions = system.positions[ au_indices ]
-	H_idx = get_H_from_ICONST( iconst )
-	for au_idx in au_indices:
-		distance_H_to_Au.append( np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_idx ] ) )
-	min_H_Au_dist = round( min( distance_H_to_Au ), 3 )  
-	if min_H_Au_dist < threshold_distance:
-		result = True
-	#print( result, min_H_Au_dist )
+	H_info = get_H_from_ICONST( iconst )
+	if isinstance( H_info, int ):
+		H_idx = H_info
+		distance_H_to_Au = [ np.linalg.norm(system.positions[ au_idx ] - system.positions[ H_idx ] ) for au_idx in au_indices ]
+		min_H_Au_dist = round( min( distance_H_to_Au ), 3 )
+		if min_H_Au_dist < threshold_distance:
+			result = True
+	elif isinstance( H_info, tuple ):
+		O_idx, H_H2O_idx, H_cation_idx = H_info
+		distance_H_to_Au = [ np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_H2O_idx ] ) for au_idx in au_indices ]
+		min_H_Au_dist = round( min( distance_H_to_Au ), 3 )
+		distance_O_to_H_cation = np.linalg.norm( system.positions[ O_idx ] - system.positions[ H_cation_idx ] )
+		initial_distance_O_to_H_cation = np.linalg.norm( initial_system.positions[ O_idx ] - initial_system.positions[ H_cation_idx ] )
+		#print( "initial dist: ", initial_distance_O_to_H_cation )
+		#print( "min H Au dist: ", min_H_Au_dist )
+		if min_H_Au_dist < threshold_distance and distance_O_to_H_cation < threshold_distance and initial_distance_O_to_H_cation < threshold_distance:
+			result = True
 	return result
 
 
 if __name__ == "__main__":
-	get_NH4_hydration_shell_shuttling( "POSCAR", H2O_mols, NH4_mols, to_print = "True" )
+	loc = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/CH3NH3/5_CH3NH3/shuttling/5_CH3NH3_40_H2O_v19"
+	status = get_status( loc + "/CONTCAR", loc + "/ICONST" )
+	print( status )

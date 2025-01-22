@@ -7,6 +7,7 @@ import numpy as np
 import json
 import getpass
 from ase.io import read
+import get_mols
 
 # Replaces '~' in the given path with the user's home directory (/home/<username>)
 # path: The file path that may start with '~'
@@ -38,12 +39,10 @@ def flatten_matrix( matrix ):
 
 # Retrieves a list of all directories or files in the current directory that match the pattern "RUN*".
 # Returns: A list of matching items or an empty list if no matches are found.
-def get_RUNs():
-		runs = glob.glob( "RUN*" )
-		if runs:
-			return runs
-		else:
-			return []
+def get_RUNs( path_to_simulation ):
+	path_to_simulation = os.path.normpath(path_to_simulation )
+	runs = glob.glob( os.path.join( path_to_simulation, "RUN*" ) )
+	return runs
 
 # Extracts the "H" index from the first line of an ICONST file.
 # iconst: The path to the ICONST file to process.
@@ -66,7 +65,7 @@ def get_H_from_ICONST( iconst, to_print = "False"):
 def get_initial_H_Au_distance( path_to_SG_calculation, to_print = "False" ):
 	distance_H_to_Au = list()
 	os.chdir( path_to_SG_calculation )
-	runs = get_RUNs()
+	runs = get_RUNs( path_to_SG_calculation )
 	H_idx = get_H_from_ICONST( "ICONST" )
 	if not runs:
 		system = read( "POSCAR" )
@@ -110,7 +109,7 @@ def get_cc_bm():
 def collect_cc_and_bm( path_to_SG_calculation ):
 	if os.path.exists( path_to_SG_calculation ):
 		os.chdir( path_to_SG_calculation )
-		runs = get_RUNs()
+		runs = get_RUNs( path_to_SG_calculation )
 		if not runs and os.path.isfile( path_to_SG_calculation + "/OUTCAR" ) == False:
 			return None, None
 		if not runs:
@@ -182,6 +181,89 @@ def get_barriers_to_dictionary( path_to_SG_calculation, barriers_dict ):
 	#print( barriers_dict )
 	return barriers_dict
 
+################################# FROM ICONST #################################
+
+# Parses an ICONST file to extract atomic indices based on the number of lines in the file.
+# iconst: Path to the ICONST file.
+# to_print: If True, prints detailed index information. Defaults to False.
+# Returns: 
+# - If the ICONST file has 2 lines, returns a tuple (H_idx, O_idx) with zero-based indices.
+# - If the ICONST file has 3 lines, returns a tuple (O_H2O_idx, H_H2O_idx, H_cation_idx) with zero-based indices.
+# Raises: ValueError if the ICONST file contains less than 2 lines or more than 3 lines.
+def get_data_ICONST( iconst, to_print = False ):
+	first_line = list()
+	second_line = list()
+	with open( iconst ) as file:
+		lines = [ line.rstrip() for line in file ]
+	if len( lines ) < 2:
+		raise ValueError( "ICONST file must contain at least two lines." )
+	elif len( lines ) == 2:
+		with open( iconst ) as file:
+			lines = [ line.rstrip() for line in file ]
+		first_line =  lines[ 0 ].split( " " ) 
+		O_idx = first_line[ 1 ]
+		H_idx = first_line[ 2 ]
+		if to_print: 
+			print( "ICONST H index: ", H_idx )
+			print( "Actual H index: ", int( H_idx ) - 1 ) 
+			print( "ICONST O index: ", O_idx )
+			print( "Actual O index: ", int( O_idx ) - 1 )
+		return int( H_idx ) - 1, int( O_idx ) - 1
+	elif len( lines ) == 3:
+		with open( iconst ) as file:
+			lines = [ line.rstrip() for line in file ]
+		first_line = lines[ 0 ].split( " " )
+		second_line = lines[ 1 ].split( " " )
+		O_H2O_idx = first_line[ 1 ]
+		H_H2O_idx = first_line[ 2 ]
+		H_cation_idx = second_line[ 2 ]
+		if to_print:
+			print( "ICONST O(H2O) index: ", O_H2O_idx )
+			print( "ICONST H(H2O) index: ", H_H2O_idx )
+			print( "ICONST H(cation) index: ", H_cation_idx )
+			print( "Actual O(H2O) index: ", int( O_H2O_idx ) -1 )
+			print( "Actual H(H2O) index: ", int( H_H2O_idx ) -1 )
+			print( "Actual H(cation) index: ", int( H_cation_idx ) -1 )
+		return int( O_H2O_idx ) -1, int( H_H2O_idx ) -1, int( H_cation_idx ) -1
+	else:
+		raise ValueError( "ICONST file must NOT contain more than three lines." )
+
+# Retrieves the initial atomic structure system for a given simulation path.
+# path_to_simulation: The path to the simulation directory.
+# Returns: 
+# - The initial atomic structure as an ASE atoms object.
+# - If no `RUN*` directories are present, reads the system from `POSCAR` in the base path.
+# - If `RUN*` directories are present, reads the system from `POSCAR` in the `RUN1` directory.
+def get_initial_system( path_to_simulation ):
+	runs = get_RUNs( path_to_simulation )
+	path = convert( path_to_simulation )
+	if not runs:
+		initial_system =  path +  "/POSCAR" 
+	else:
+		initial_system =  path + "/RUN1/POSCAR" 
+	return initial_system 
+
+def get_O_cation_min_distance( cation, path, O_idx, cation_list ):
+	system = read( path + "/POSCAR")
+
+	O_position = system.positions[ O_idx ]
+
+	distances = list()
+
+	if cation == "Na":
+		for cation_idx in cation_list:
+			cation_position = system.positions[ cation_idx ]
+			distances.append( np.linalg.norm( O_position - cation_position ) )
+	elif cation in ["N-NH4", "N-CH3NH3"]:
+		for cation_group in cation_list:
+			N_idx = cation_group[0]  # First number is the N index
+			cation_position = system.positions[ N_idx ]
+			distances.append( np.linalg.norm( O_position - cation_position ) )
+	else:
+		raise ValueError("Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'.")
+	
+	return round( min( distances ), 2 )
+
 ################################# FROM DATABASE #################################
 
 # Loads a JSON database from a specified file.
@@ -192,60 +274,189 @@ def load_database( database_file ):
 		database = json.load( file )
 	return database
 
+'''
 # Extracts and filters barriers from a database based on a specific key, only considering entries marked as "Good".
 # database: The database containing barrier information.
 # val: The key in the database to filter and process.
-# Returns: A sorted dataframe of barriers with keys as "barrier_<name>" and values as the barrier values.
+# Returns: A sorted dictionary of barriers with keys as "barrier_<name>" and values as the barrier values.
 def get_barrier_from_db( database, val, to_print = False ):
 	data = pd.DataFrame()
 	filtered_data = {}
 	names = list()
 	barriers = list()
-	distances = list()
+	distances_H_Au = list()
+	distances_O_cation = list()
 	for key, value in database[ val ].items():
-		#aux_key =""
+		aux_key = None
 		if value[ "note" ] == "Good":
-			#print( value[ "path" ] )
-			if value[ "path" ].split("/")[ -2 ] == "H2O_from_hydration_shell_splitting" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_from_CH3NH3_hydration_shell":
+			if value[ "path" ].split("/")[ -2 ] == "H2O_from_hydration_shell_splitting" or   value[ "path" ].split("/")[ -2 ] == "H2O_splitting_from_NH4_hydration_shell" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_from_CH3NH3_hydration_shell":
 				aux_key = "hyd_shell"
-			elif value[ "path" ].split("/")[ -2 ] == "free_H2O_splitting" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_NOT_from_CH3NH3_hydration_shell":
+			elif value[ "path" ].split("/")[ -2 ] == "free_H2O_splitting" or  value[ "path" ].split("/")[ -2 ] == "H2O_splitting_NOT_from_NH4_hydration_shell" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_NOT_from_CH3NH3_hydration_shell":
 				aux_key = "NO_hyd_shell"
-			elif value[ "path" ].split("/")[ -2 ] == "CH3NH3_splitting":
+				print( aux_key )
+			elif value[ "path" ].split("/")[ -2 ] == "NH4_splitting" or value[ "path" ].split("/")[ -2 ] == "CH3NH3_splitting":
 				aux_key = value[ "path" ].split("/")[ -2 ]
 			elif value[ "path" ].split("/")[ -2 ] == "shuttling":
 				aux_key = value[ "path" ].split("/")[ -2 ] + "_shuttling"
+			if not aux_key :
+				print("Nothing to report here")
+				return None
+			initial_system = get_initial_system( convert( value[ "path" ] ) ) 
+			if "Na" in f"bar_{aux_key}_{value['path'].split('/')[-1]}": 
+				cation = "Na" 
+				cations = get_mols.get_Na_mols( initial_system )
+			elif "NH4" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+				cation = "N-NH4"
+				cations = get_mols.get_NH4_mols( initial_system )
+			elif "CH3NH3" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+				cation = "N-CH3NH3"
+				cations = get_mols.get_CH3NH3_mols( initial_system )
+			data_ICONST = get_data_ICONST( convert( value[ "path" ] ) + "/ICONST" ) 
+			if len( data_ICONST ) == 2:
+				_, O_idx = data_ICONST
+			elif len( data_ICONST ) == 3:
+				O_idx, _, __ = data_ICONST
 			filtered_data[  "bar_" + aux_key + "_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
 			filtered_data[  "Dist(H-Au)_" + value[ "path" ].split("/")[ -1 ] ] = get_initial_H_Au_distance( convert( value[ "path" ] ) )
+			filtered_data[  "Dist(O-cation)_" + aux_key + "_" + value[ "path" ].split("/")[ -1 ] ] = get_O_cation_min_distance( cation, convert( value[ "path" ] ), O_idx, cations )
 	sorted_dict = sort_dict( filtered_data )
 	for key in sorted_dict:
 		if key.startswith( "bar" ):
 			names.append( key )
 			barriers.append( sorted_dict[ key ] )
-		else:
-			distances.append( sorted_dict[ key ] )
+		elif key.startswith( "Dist(H-Au)_" ) :
+			distances_H_Au.append( sorted_dict[ key ] )
+		elif key.startswith( "Dist(O-cation)_" ):
+			distances_O_cation.append( sorted_dict[ key ] )
 	data[ "CONF" ] = names
 	data[ "barrier" ] = barriers
-	data[ "H-Au_distance" ] = distances
+	data[ "H-Au_distance" ] = distances_H_Au
+	if "splitting" not in aux_key:
+		data[ "O-cation_distance" ] = distances_O_cation
+	print( aux_key )
 	if to_print == True:
 		print( data.to_string() )
 	return data 
+'''
+
+# Extracts and filters barriers from a database based on a specific key, only considering entries marked as "Good".
+# database: The database containing barrier information.
+# val: The key in the database to filter and process.
+# Returns: A sorted dictionary of barriers with keys as "barrier_<name>" and values as the barrier values.
+def get_barrier_from_db(database, val, to_print=False):
+	data = pd.DataFrame()
+	filtered_data = {}
+	names = list()
+	barriers = list()
+	distances_H_Au = list()
+	distances_O_cation = list()
+	aux_key = None
+
+	for key, value in database[val].items():
+		if value["note"] == "Good":
+			path_key = value["path"].split("/")[-2]
+			if path_key in [
+				"H2O_from_hydration_shell_splitting",
+				"H2O_splitting_from_NH4_hydration_shell",
+				"H2O_splitting_from_CH3NH3_hydration_shell"
+			]:
+				aux_key = "hyd_shell"
+			elif path_key in [
+				"free_H2O_splitting",
+				"H2O_splitting_NOT_from_NH4_hydration_shell",
+				"H2O_splitting_NOT_from_CH3NH3_hydration_shell"
+			]:
+				aux_key = "NO_hyd_shell"
+			elif path_key in ["NH4_splitting", "CH3NH3_splitting"]:
+				aux_key = path_key
+			elif path_key == "shuttling":
+				aux_key = f"{path_key}_shuttling"
+			else:
+				aux_key = ""
+
+			if not aux_key:
+				print("Nothing to report here")
+				return None
+
+			initial_system = get_initial_system(convert(value["path"]))
+			if "Na" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+				cation = "Na"
+				cations = get_mols.get_Na_mols(initial_system)
+			elif "NH4" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+				cation = "N-NH4"
+				cations = get_mols.get_NH4_mols(initial_system)
+			elif "CH3NH3" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+				cation = "N-CH3NH3"
+				cations = get_mols.get_CH3NH3_mols(initial_system)
+
+			data_ICONST = get_data_ICONST(convert(value["path"]) + "/ICONST")
+			if len(data_ICONST) == 2:
+				_, O_idx = data_ICONST
+			elif len(data_ICONST) == 3:
+				O_idx, _, __ = data_ICONST
+
+			filtered_data[f"bar_{aux_key}_{value['path'].split('/')[-1]}"] = get_barrier(
+				convert(value["path"])
+			)
+			filtered_data[f"Dist(H-Au)_{value['path'].split('/')[-1]}"] = get_initial_H_Au_distance(
+				convert(value["path"])
+			)
+			filtered_data[f"Dist(O-cation)_{aux_key}_{value['path'].split('/')[-1]}"] = get_O_cation_min_distance(
+				cation, convert(value["path"]), O_idx, cations
+			)
+
+	if aux_key is None:
+		print("No valid aux_key found in database.")
+		return None
+
+	sorted_dict = sort_dict(filtered_data)
+
+	for key in sorted_dict:
+		if key.startswith("bar"):
+			names.append(key)
+			barriers.append(sorted_dict[key])
+		elif key.startswith("Dist(H-Au)_"):
+			distances_H_Au.append(sorted_dict[key])
+		elif key.startswith("Dist(O-cation)_"):
+			distances_O_cation.append(sorted_dict[key])
+
+	data["CONF"] = names
+	data["barrier"] = barriers
+	data["H-Au_distance"] = distances_H_Au
+	if aux_key and "splitting" not in aux_key:
+		data["O-cation_distance"] = distances_O_cation
+
+	if to_print:
+		print(data.to_string())
+
+	return data
 
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )
 
+	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+
+	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )	
+
+	Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+
+	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	
 	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
 
 	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+
 	
-	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", to_print = True )
 	
-	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+	#NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	
+	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", to_print = True )
 
-	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", to_print = True )
 
+	
 	CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
 	
 	CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )

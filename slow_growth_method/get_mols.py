@@ -610,15 +610,40 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 ################################## Get status ##################################
 
 #Finds the index of the Hydrogen (H) atom in an ICONST file that is moving toward a specified surface.
-def get_H_from_ICONST( iconst, to_print = "False"):
+def get_H_from_ICONST( iconst, to_print = False ):
 	first_line = list()
+	second_line = list()
 	with open( iconst ) as file:
 		lines = [ line.rstrip() for line in file ]
-	first_line.append( lines[ 0 ] )
-	H_idx = first_line[ 0 ].split( " " )[ -2 ]
-	if to_print == "True": 
-		print( "H index: ", H_idx ) 
-	return int( H_idx ) - 1
+	if len( lines ) < 2:
+		raise ValueError( "ICONST file must contain at least two lines." )
+	elif len( lines ) == 2:
+		with open( iconst ) as file:
+			lines = [ line.rstrip() for line in file ]
+		first_line =  lines[ 0 ].split( " " ) 
+		H_idx = first_line[ 2 ]
+		if to_print: 
+			print( "ICONST H index: ", H_idx )
+			print( "Actual H index: ", int( H_idx ) - 1 ) 
+		return int( H_idx ) - 1
+	elif len( lines ) == 3:
+		with open( iconst ) as file:
+			lines = [ line.rstrip() for line in file ]
+		first_line = lines[ 0 ].split( " " )
+		second_line = lines[ 1 ].split( " " )
+		O_H2O_idx = first_line[ 1 ]
+		H_H2O_idx = first_line[ 2 ]
+		H_cation_idx = second_line[ 2 ]
+		if to_print:
+			print( "ICONST O(H2O) index: ", O_H2O_idx )
+			print( "ICONST H(H2O) index: ", H_H2O_idx )
+			print( "ICONST H(cation) index: ", H_cation_idx )
+			print( "Actual O(H2O) index: ", int( O_H2O_idx ) -1 )
+			print( "Actual H(H2O) index: ", int( H_H2O_idx ) -1 )
+			print( "Actual H(cation) index: ", int( H_cation_idx ) -1 )
+		return int( O_H2O_idx ) -1, int( H_H2O_idx ) -1, int( H_cation_idx ) -1
+	else:
+		raise ValueError( "ICONST file must NOT contain more than three lines." )
 
 #check if the H atom from ICONST indeed moved to Au
 def get_status( contcar, iconst, threshold_distance = 2.0 ):

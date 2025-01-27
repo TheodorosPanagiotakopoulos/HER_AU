@@ -248,9 +248,12 @@ def get_O_cation_min_distance( cation, path, O_idx, cation_list ):
 	runs = get_RUNs( path )
 	if not runs:
 		system = read( path + "/POSCAR")
+		#print( "No RUN found:" )
 	else:
-		last_run = runs[ - 1 ].split( "/" )[ -1 ]
-		system = read( path + "/" + last_run +  "/POSCAR")
+		#print( "RUN found" )
+		first_run = runs[ 0 ].split( "/" )[ -1 ]
+		#print( first_run )
+		system = read( path + "/" + first_run +  "/POSCAR")
 	O_position = system.positions[ O_idx ]
 
 	distances = list()
@@ -279,70 +282,6 @@ def load_database( database_file ):
 		database = json.load( file )
 	return database
 
-'''
-# Extracts and filters barriers from a database based on a specific key, only considering entries marked as "Good".
-# database: The database containing barrier information.
-# val: The key in the database to filter and process.
-# Returns: A sorted dictionary of barriers with keys as "barrier_<name>" and values as the barrier values.
-def get_barrier_from_db( database, val, to_print = False ):
-	data = pd.DataFrame()
-	filtered_data = {}
-	names = list()
-	barriers = list()
-	distances_H_Au = list()
-	distances_O_cation = list()
-	for key, value in database[ val ].items():
-		aux_key = None
-		if value[ "note" ] == "Good":
-			if value[ "path" ].split("/")[ -2 ] == "H2O_from_hydration_shell_splitting" or   value[ "path" ].split("/")[ -2 ] == "H2O_splitting_from_NH4_hydration_shell" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_from_CH3NH3_hydration_shell":
-				aux_key = "hyd_shell"
-			elif value[ "path" ].split("/")[ -2 ] == "free_H2O_splitting" or  value[ "path" ].split("/")[ -2 ] == "H2O_splitting_NOT_from_NH4_hydration_shell" or value[ "path" ].split("/")[ -2 ] == "H2O_splitting_NOT_from_CH3NH3_hydration_shell":
-				aux_key = "NO_hyd_shell"
-				print( aux_key )
-			elif value[ "path" ].split("/")[ -2 ] == "NH4_splitting" or value[ "path" ].split("/")[ -2 ] == "CH3NH3_splitting":
-				aux_key = value[ "path" ].split("/")[ -2 ]
-			elif value[ "path" ].split("/")[ -2 ] == "shuttling":
-				aux_key = value[ "path" ].split("/")[ -2 ] + "_shuttling"
-			if not aux_key :
-				print("Nothing to report here")
-				return None
-			initial_system = get_initial_system( convert( value[ "path" ] ) ) 
-			if "Na" in f"bar_{aux_key}_{value['path'].split('/')[-1]}": 
-				cation = "Na" 
-				cations = get_mols.get_Na_mols( initial_system )
-			elif "NH4" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
-				cation = "N-NH4"
-				cations = get_mols.get_NH4_mols( initial_system )
-			elif "CH3NH3" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
-				cation = "N-CH3NH3"
-				cations = get_mols.get_CH3NH3_mols( initial_system )
-			data_ICONST = get_data_ICONST( convert( value[ "path" ] ) + "/ICONST" ) 
-			if len( data_ICONST ) == 2:
-				_, O_idx = data_ICONST
-			elif len( data_ICONST ) == 3:
-				O_idx, _, __ = data_ICONST
-			filtered_data[  "bar_" + aux_key + "_" + value[ "path" ].split("/")[ -1 ] ] = get_barrier( convert( value[ "path" ] ) )
-			filtered_data[  "Dist(H-Au)_" + value[ "path" ].split("/")[ -1 ] ] = get_initial_H_Au_distance( convert( value[ "path" ] ) )
-			filtered_data[  "Dist(O-cation)_" + aux_key + "_" + value[ "path" ].split("/")[ -1 ] ] = get_O_cation_min_distance( cation, convert( value[ "path" ] ), O_idx, cations )
-	sorted_dict = sort_dict( filtered_data )
-	for key in sorted_dict:
-		if key.startswith( "bar" ):
-			names.append( key )
-			barriers.append( sorted_dict[ key ] )
-		elif key.startswith( "Dist(H-Au)_" ) :
-			distances_H_Au.append( sorted_dict[ key ] )
-		elif key.startswith( "Dist(O-cation)_" ):
-			distances_O_cation.append( sorted_dict[ key ] )
-	data[ "CONF" ] = names
-	data[ "barrier" ] = barriers
-	data[ "H-Au_distance" ] = distances_H_Au
-	if "splitting" not in aux_key:
-		data[ "O-cation_distance" ] = distances_O_cation
-	print( aux_key )
-	if to_print == True:
-		print( data.to_string() )
-	return data 
-'''
 
 # Extracts and filters barriers from a database based on a specific key, only considering entries marked as "Good".
 # database: The database containing barrier information.
@@ -414,12 +353,12 @@ def get_barrier_from_db(database, val, to_print=False):
 		print("No valid aux_key found in database.")
 		return None
 
-	sorted_dict = sort_dict(filtered_data)
-
-	for key in sorted_dict:
-		if key.startswith("bar"):
-			names.append(key)
-			barriers.append(sorted_dict[key])
+	sorted_dict = sort_dict( filtered_data )
+	
+	for key in filtered_data:
+		if key.startswith( "bar" ):
+			names.append( key )
+			barriers.append( sorted_dict[ key ] )
 		elif key.startswith("Dist(H-Au)_"):
 			distances_H_Au.append(sorted_dict[key])
 		elif key.startswith("Dist(O-cation)_"):
@@ -431,8 +370,11 @@ def get_barrier_from_db(database, val, to_print=False):
 	if aux_key and "splitting" not in aux_key:
 		data["O-cation_distance"] = distances_O_cation
 
+	sorted_data = data.sort_values( by='barrier' )
+
 	if to_print:
-		print(data.to_string())
+		print(sorted_data.to_string())
+		#print( sorted_dict )
 
 	return data
 
@@ -469,3 +411,4 @@ if __name__ == "__main__":
 	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
 
 	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )
+

@@ -42,6 +42,7 @@ def flatten_matrix( matrix ):
 def get_RUNs( path_to_simulation ):
 	path_to_simulation = os.path.normpath(path_to_simulation )
 	runs = glob.glob( os.path.join( path_to_simulation, "RUN*" ) )
+	runs.sort( key=lambda x: int(os.path.basename( x ).replace("RUN", "") ) )
 	return runs
 
 # Extracts the "H" index from the first line of an ICONST file.
@@ -244,8 +245,12 @@ def get_initial_system( path_to_simulation ):
 	return initial_system 
 
 def get_O_cation_min_distance( cation, path, O_idx, cation_list ):
-	system = read( path + "/POSCAR")
-
+	runs = get_RUNs( path )
+	if not runs:
+		system = read( path + "/POSCAR")
+	else:
+		last_run = runs[ - 1 ].split( "/" )[ -1 ]
+		system = read( path + "/" + last_run +  "/POSCAR")
 	O_position = system.positions[ O_idx ]
 
 	distances = list()
@@ -443,9 +448,9 @@ if __name__ == "__main__":
 
 	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
 	
-	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
+	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
 
-	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
 
 	
 	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", to_print = True )
@@ -457,10 +462,10 @@ if __name__ == "__main__":
 	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", to_print = True )
 
 	
-	CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
+	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
 	
-	CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	#CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
 	
-	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
+	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
 
-	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )
+	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )

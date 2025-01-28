@@ -1,7 +1,9 @@
+import os
 import pandas as pd
 import numpy as np
 from ase.io import read
 from scipy.spatial.distance import cdist
+import glob
 
 ################################## H2O molecules ##################################
 
@@ -652,17 +654,18 @@ def get_H_from_ICONST( iconst, to_print = False ):
 		raise ValueError( "ICONST file must NOT contain more than three lines." )
 
 #check if the H atom from ICONST indeed moved to Au
-def get_status( contcar, iconst, threshold_distance = 2.0 ):
+def get_status( path_to_simulation, threshold_distance = 2.0 ):
 	result = False
-	system = read( contcar )
-	path_to_simulation = os.path.dirname( contcar )
+	if not os.path.isfile( path_to_simulation + "/CONTCAR" ):
+		return result
+	system = read( path_to_simulation + "/CONTCAR" )
 	runs = get_RUNs( path_to_simulation )
 	if not runs:
 		initial_system = read( path_to_simulation + "/POSCAR")
 	else:
 		initial_system = read( path_to_simulation + "/RUN1/POSCAR")
 	au_indices = [ i for i, j in enumerate( system ) if j.symbol == "Au" ]
-	H_info = get_H_from_ICONST( iconst )
+	H_info = get_H_from_ICONST( path_to_simulation + "/ICONST" )
 	if isinstance( H_info, int ):
 		H_idx = H_info
 		distance_H_to_Au = [ np.linalg.norm(system.positions[ au_idx ] - system.positions[ H_idx ] ) for au_idx in au_indices ]

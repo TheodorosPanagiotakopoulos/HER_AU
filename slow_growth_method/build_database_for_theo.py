@@ -19,8 +19,8 @@ def db_add( database, key, name, input ):
 	if 'path' not in input.keys():
 		print ( "ERROR: path is required %s" %(input) )
 		exit()
-
-	database[ key ][ name ] = input
+    
+	database[ key ][ name ] = input 
 
 def db_update( database, key, name, input ):
 	if 'path' not in input.keys():
@@ -52,9 +52,10 @@ def add_to_database( loc, key, folders, note = "" ):
 	for name in [ x for x in os.listdir( convert( loc ) ) if folders in x ]:
 		path = loc + name
 		loc_contcar = convert( loc )  +  name + "/CONTCAR"
+		note = "Bad"
 		if ( os.path.isfile( loc_contcar ) ) == True:
 			status = get_mols.get_status( convert( loc )  +  name  )
-			note = "Bad"
+			#note = "Bad"
 			if status == True:
 				note = "Good"
 			input = { 'path': path, 'note': note }
@@ -74,8 +75,8 @@ def add_to_database_v2( loc, key ):
 	db_save( database, 'database_for_theo.js' )
 
 if __name__ == "__main__":
-	database = {}
-
+	database = {}        
+	
 	Na_relax = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/relaxation/Na"
 	add_to_database_v2( Na_relax, "Na_relax" )
 

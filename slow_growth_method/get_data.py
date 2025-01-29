@@ -111,8 +111,10 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 	if os.path.exists( path_to_SG_calculation ):
 		os.chdir( path_to_SG_calculation )
 		runs = get_RUNs( path_to_SG_calculation )
-		if not runs and os.path.isfile( path_to_SG_calculation + "/OUTCAR" ) == False:
+		if not runs and not (os.path.isfile(path_to_SG_calculation + "/OUTCAR") or os.path.isfile(path_to_SG_calculation + "/OUTCAR.gz")):
 			return None, None
+		#if not runs and os.path.isfile( path_to_SG_calculation + "/OUTCAR" ) == False:
+		#	return None, None
 		if not runs:
 			print( "No RUN directories" )
 			CC, B_M = get_cc_bm()
@@ -244,33 +246,43 @@ def get_initial_system( path_to_simulation ):
 		initial_system =  path + "/RUN1/POSCAR" 
 	return initial_system 
 
-def get_O_cation_min_distance( cation, path, O_idx, cation_list ):
-	runs = get_RUNs( path )
+def get_O_cation_min_distance(cation, path, O_idx, cation_list):
+	runs = get_RUNs(path)
 	if not runs:
-		system = read( path + "/POSCAR")
-		#print( "No RUN found:" )
+		system = read(path + "/POSCAR")
 	else:
-		#print( "RUN found" )
-		first_run = runs[ 0 ].split( "/" )[ -1 ]
-		#print( first_run )
-		system = read( path + "/" + first_run +  "/POSCAR")
+		first_run = runs[0].split("/")[-1]
+		system = read(path + "/" + first_run + "/POSCAR")
+	
 	O_position = system.positions[ O_idx ]
-
-	distances = list()
+	distances = []
 
 	if cation == "Na":
 		for cation_idx in cation_list:
 			cation_position = system.positions[ cation_idx ]
-			distances.append( np.linalg.norm( O_position - cation_position ) )
-	elif cation in ["N-NH4", "N-CH3NH3"]:
+			distances.append(np.linalg.norm( O_position - cation_position ) )
+		return round( min( distances ), 2 ), np.nan
+
+	elif cation in [ "N-NH4", "N-CH3NH3" ]:
+		cation_distances = list()
+		H_distances = list()
+
 		for cation_group in cation_list:
-			N_idx = cation_group[0]  # First number is the N index
-			cation_position = system.positions[ N_idx ]
-			distances.append( np.linalg.norm( O_position - cation_position ) )
+			N_idx = cation_group[ 0 ] 
+			N_position = system.positions[ N_idx ]
+			cation_distances.append( np.linalg.norm( O_position - N_position ) )
+
+			H_indices = cation_group[ 1: ] 
+			for H_idx in H_indices:
+				H_position = system.positions[ H_idx ]
+				H_distances.append( np.linalg.norm(O_position - H_position ) )
+
+		return round( min( cation_distances ), 2 ), round( min( H_distances ), 2 )
+
 	else:
-		raise ValueError("Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'.")
-	
-	return round( min( distances ), 2 )
+		raise ValueError( "Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'." )
+
+
 
 ################################# FROM DATABASE #################################
 
@@ -287,13 +299,14 @@ def load_database( database_file ):
 # database: The database containing barrier information.
 # val: The key in the database to filter and process.
 # Returns: A sorted dictionary of barriers with keys as "barrier_<name>" and values as the barrier values.
-def get_barrier_from_db( database, val, to_print = False ):
+def get_barrier_from_db( database, val, fixed_length = 45, to_print = False ):
 	data = pd.DataFrame()
 	filtered_data = {}
 	names = list()
 	barriers = list()
 	distances_H_Au = list()
 	distances_O_cation = list()
+	distances_O_H = list()
 	aux_key = None
 
 	for key, value in database[ val ].items():
@@ -321,7 +334,7 @@ def get_barrier_from_db( database, val, to_print = False ):
 			if not aux_key:
 				print("Nothing to report here")
 				return None
-
+			
 			initial_system = get_initial_system( convert( value[ "path" ] ) )
 			if "Na" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
 				cation = "Na"
@@ -347,13 +360,18 @@ def get_barrier_from_db( database, val, to_print = False ):
 			)
 			filtered_data[ f"Dist(O-cation)_{aux_key}_{value['path'].split( '/' )[-1] }" ] = get_O_cation_min_distance(
 				cation, convert( value[ "path" ] ), O_idx, cations
-			)
+			)[ 0 ]
+			filtered_data[ f"Dist(O-H)_{aux_key}_{value['path'].split( '/' )[-1] }" ] = get_O_cation_min_distance(
+                cation, convert( value[ "path" ] ), O_idx, cations
+            )[ 1 ]
 
 	if aux_key is None:
-		print( "\n No valid aux_key found in database for: ", val, "\n" )
+		print( "No valid aux_key found in database for: ", val, "\n" )
 		return None
+	
 	sorted_dict = sort_dict( filtered_data )
 	
+
 	for key in filtered_data:
 		if key.startswith( "bar" ):
 			names.append( key )
@@ -362,19 +380,29 @@ def get_barrier_from_db( database, val, to_print = False ):
 			distances_H_Au.append( sorted_dict[ key ] )
 		elif key.startswith( "Dist(O-cation)_" ):
 			distances_O_cation.append( sorted_dict[ key ] )
+		elif key.startswith( "Dist(O-H)" ):
+			distances_O_H.append( sorted_dict[ key ] )
 
 	data[ "CONF" ] = names
 	data[ "barrier" ] = barriers
 	data[ "H-Au_distance" ] = distances_H_Au
-	if aux_key and "splitting" not in aux_key:
+	if ( aux_key and "splitting" not in aux_key ):
 		data[ "O-cation_distance" ] = distances_O_cation
+		data[ "O-H_distance" ] = distances_O_H
 
-	sorted_data = data.sort_values( by='barrier' )
+	sorted_data = data.sort_values( by = "barrier" )
+
+	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply( lambda x: x[ : fixed_length ].ljust( fixed_length ) )
+	
+	pd.set_option( "display.colheader_justify", "left" ) 
+	sorted_data.style.set_properties( **{ "text-align": "center" } ) 
+	
 
 	if to_print:
-		print( sorted_data.to_string() )
+		print( sorted_data.to_string(), "\n" )
 
-	return data
+	return sorted_data
+
 
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
@@ -401,12 +429,38 @@ if __name__ == "__main__":
 
 	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", to_print = True )
 
-	
-	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
-	
-	#CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-	
-	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
 
-	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )
+	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", to_print = True )
 
+	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+
+	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", to_print = True )
+
+	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", to_print = True )
+
+
+	CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
+
+	CH3NH3_1_NO_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+
+	CH3NH3_1_splitting = get_barrier_from_db( data, "1_CH3NH3_spliting", to_print = True )
+
+	CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", to_print = True )
+
+
+	CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
+
+	CH3NH3_3_NO_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+
+	CH3NH3_3_splitting = get_barrier_from_db( data, "3_CH3NH3_spliting", to_print = True )
+
+	CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", to_print = True )
+
+
+	CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
+	
+	CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
+	
+	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
+
+	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )

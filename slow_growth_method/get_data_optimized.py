@@ -9,6 +9,11 @@ import getpass
 from ase.io import read
 import get_mols
 
+# Retrieves the indices of all atoms of a specified element in the given atomic system.
+# system: The atomic system (a list of atoms or an ASE Atoms object).
+# element: The chemical symbol of the element whose indices are to be found.
+# verbose: A flag (boolean) to control whether additional information is printed (default is False).
+# Returns: A list of indices corresponding to the positions of the specified element in the system.
 def get_element_indices( system, element, verbose = False ):
 	return  [ i for i, j in enumerate( system ) if j.symbol == element ]
 
@@ -100,6 +105,10 @@ def get_data_ICONST( iconst, verbose = False ):
 	else:
 		raise ValueError( "ICONST file must NOT contain more than three lines." )
 
+# Standardizes the ICONST data by ensuring it follows a consistent format.
+# iconst_data: A list containing either 2 or 3 indices representing atomic relationships.
+# Returns: A tuple containing (H_idx, O_idx, H_cation_idx). If only two indices are provided, H_cation_idx is set to NaN.
+# Raises: ValueError if the input does not contain exactly 2 or 3 elements.
 def get_standarized_ICONST_data( iconst_data ):
 	if len( iconst_data ) == 2:
 		H_idx, O_idx = iconst_data
@@ -132,6 +141,54 @@ def get_initial_H_Au_distance( path_to_SG_calculation, verbose = False ):
 		print( "min_H_Au_dist: ", min_H_Au_dist )	
 	return min_H_Au_dist
 
+# Retrieves the initial system configuration from a SG simulation.
+# path_to_SG_simulation: The path to the SG simulation directory.
+# Returns: The initial atomic structure read from the POSCAR file, either from the first run in the directory or directly from the main path if no runs are found.
+def get_initial_system( path_to_SG_simulation ):
+	runs = get_RUNs( path_to-SG_simulation )
+	if not runs:
+		return read( path + "/POSCAR" )
+	first_run = runs[ 0 ].split( "/" )[ -1 ]
+	return read( path + "/" + first_run + "/POSCAR" )
+
+# Calculates the minimum distance between a given oxygen atom and a list of cation groups.
+# system: The atomic system (an ASE Atoms object).
+# O_position: The position of the oxygen atom (numpy array or list of coordinates).
+# cation_list: A list of cation groups, where each group contains atomic indices.
+# Returns: The minimum distance between the oxygen atom and any cation group, rounded to 3 decimal places.
+def get_O_cation_distances( system, O_position, cation_list ):
+	distances = [np.linalg.norm(O_position - system.positions[ cation_group[ 0 ] ] ) for cation_group in cation_list ]
+	return round( min( distances ), 3 )
+
+def get_O_H_min_distance( system, O_position, cation_list ):
+	closest_H_distance = float( "inf" )
+	closest_H_idx = None
+
+	for cation_group in cation_list:
+		H_indices = cation_group[ 1 : ]
+		for H_idx in H_indices:
+			H_position = system.positions[ H_idx ]
+			H_distance = np.linalg.norm( O_position - H_position )
+
+			if H_distance < closest_H_distance:
+				closest_H_distance = H_distance
+				closest_H_idx = H_idx
+
+	H_bond_info = f"{closest_H_idx}" if closest_H_idx is not None else None
+	return round( closest_H_distance, 3 ), H_bond_info
+
+def get_O_cation_min_distance( cation, path_to_SG_simulation, O_position, cation_list ):
+	system = get_system_positions( path_to_SG_simulation )
+
+	min_cation_distance = calculate_cation_distances( O_position, cation_list, system )
+
+	# Special case for N-based cations (find closest hydrogen)
+	if cation in ["N-NH4", "N-CH3NH3"]:
+		closest_H_distance, H_bond_info = find_closest_H(O_position, cation_list, system)
+		return min_cation_distance, closest_H_distance, H_bond_info
+
+	return min_cation_distance, np.nan, np.nan
+
 ################################# SLOW GROWTH METHOD #################################
 
 # Processes a "REPORT" file or "REPORT.gz" file to extract and parse lines containing "cc" and "b_m".
@@ -153,7 +210,6 @@ def get_cc_bm():
 		print( "REPORT NOT found" )
 	df_cc = pd.DataFrame( [ row.split() for row in cc ] )
 	df_bm = pd.DataFrame( [ row.split() for row in b_m ] )
-	#print( df_bm.to_string() )
 	return list( df_cc[ 3 ] ), list( df_bm[ 1 ] )
 
 # Collects and processes "cc" and "b_m" data from a specified directory containing SG calculations.
@@ -163,10 +219,8 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 	if os.path.exists( path_to_SG_calculation ):
 		os.chdir( path_to_SG_calculation )
 		runs = get_RUNs( path_to_SG_calculation )
-		if not runs and not (os.path.isfile(path_to_SG_calculation + "/OUTCAR") or os.path.isfile(path_to_SG_calculation + "/OUTCAR.gz")):
+		if not runs and not ( os.path.isfile( path_to_SG_calculation + "/OUTCAR" ) or os.path.isfile( path_to_SG_calculation + "/OUTCAR.gz" ) ):
 			return None, None
-		#if not runs and os.path.isfile( path_to_SG_calculation + "/OUTCAR" ) == False:
-		#	return None, None
 		if not runs:
 			print( "No RUN directories" )
 			CC, B_M = get_cc_bm()
@@ -456,64 +510,3 @@ def get_barrier_from_db( database, val, fixed_length = 45, to_print = False ):
 
 	return sorted_data
 
-
-if __name__ == "__main__":
-	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
-	data = load_database( path + "database_for_theo.js" )
-
-	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )	
-
-	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-	
-	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-
-	
-	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", to_print = True )
-	
-	#NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-	
-	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", to_print = True )
-
-	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", to_print = True )
-
-
-	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-
-	#NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", to_print = True )
-
-	#NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", to_print = True )
-
-
-	#CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#CH3NH3_1_NO_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-
-	#CH3NH3_1_splitting = get_barrier_from_db( data, "1_CH3NH3_spliting", to_print = True )
-
-	#CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", to_print = True )
-
-
-	#CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
-
-	#CH3NH3_3_NO_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-
-	#CH3NH3_3_splitting = get_barrier_from_db( data, "3_CH3NH3_spliting", to_print = True )
-
-	#CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", to_print = True )
-
-
-	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", to_print = True )
-	
-	#CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", to_print = True )
-	
-	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", to_print = True )
-
-	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", to_print = True )

@@ -299,7 +299,7 @@ def get_free_energy( path_to_SG_calculation ):
 def get_barrier( path_to_SG_calculation ):
 	#do not allow printing from get free_energy() 
     original_stdout = sys.stdout
-    sys.stdout = open(os.devnull, 'w')
+    sys.stdout = open( os.devnull, "w" )
     try:
         x, y = get_free_energy( path_to_SG_calculation )
         if x == None or y == None:
@@ -324,7 +324,6 @@ def get_barriers_to_dictionary( path_to_SG_calculation, barriers_dict ):
 		barriers_dict[ key ] = "Not started yet"
 	else:
 		barriers_dict[ key ] = barrier
-	#print( barriers_dict )
 	return barriers_dict
 
 ################################# FROM DATABASE #################################
@@ -428,26 +427,27 @@ def create_dataframe( filtered_data, status, aux_key ):
 	data[ "O-H-index" ] = bond_data
 	data[ "status" ] = status
 	
-	data = data.dropna( axis = 1, how = "all" )
 
 	pd.set_option( "display.colheader_justify", "left" )
-	data.style.set_properties( **{ "text-align": "center" } )
+	#data.style.set_properties( **{ "text-align": "center" } )
 
 	return data.sort_values( by= "barrier" )
 
 # Adds suggestions based on a comparison between "O-H-index" and "ICONST_idx".
 # sorted_data: A pandas DataFrame containing sorted data with "O-H-index" and "ICONST_idx".
-# Returns: The updated DataFrame with a new "propose" column containing suggestions or NaN values.
+# Returns: The updated DataFrame with a new "suggest" column containing suggestions or NaN values.
 def add_suggestions( sorted_data ):
 	suggestions = list()
 	for i, j in zip(sorted_data[ "O-H-index" ], sorted_data[ "ICONST_idx" ] ):
-		if i.split( "-" )[ -1 ] != j.split( "-" )[ -1 ]:
-			print( "first" )
-			suggestions.append(f"{ i.split( '-' )[ 0 ] } { j.split( '-' )[ 1 ] } { i.split( '-' )[ -1 ] }" )
-		else:
-			print( "sec" )
+		if np.isnan( i ) or np.isnan( j ):
 			suggestions.append( np.nan )
-	sorted_data[ "propose" ] = suggestions
+			#return sorted_data
+		else:
+			if i.split( "-" )[ -1 ] != j.split( "-" )[ -1 ]:
+				suggestions.append(f"{ i.split( '-' )[ 0 ] } { j.split( '-' )[ 1 ] } { i.split( '-' )[ -1 ] }" )
+			else:
+				suggestions.append( np.nan )
+	sorted_data[ "suggest" ] = suggestions
 	return sorted_data
 
 # Retrieves barrier data from the database and processes it into a structured DataFrame.
@@ -456,30 +456,35 @@ def add_suggestions( sorted_data ):
 # fixed_length: The length to which the "CONF" column entries should be padded/truncated. Default is 45.
 # verbose: If True, prints the DataFrame. Default is False.
 # Returns: A sorted pandas DataFrame containing processed data, or None if no valid data is found.
-def get_barrier_from_db(database, val, fixed_length=45, verbose=False):
+def get_barrier_from_db( database, val, fixed_length = 45, verbose = False):
 	filtered_data = {}
-	status = []
-	ICONST_indices = []
+	status = list()
+	ICONST_indices = list()
 
 	for key, value in database[ val ].items():
 		if value[ "note" ] in [ "Good", "Bad" ]:
-			status.append(value["note"])
+			status.append( value[ "note" ] )
 			updated_data, ICONST_idx = process_database_entry(value, filtered_data)
 			filtered_data.update( updated_data )
 			ICONST_indices.append( ICONST_idx )
 	path_key = value[ "path" ].split( "/" )[ -2 ]
 
 	if not filtered_data:
-		print("No valid data found in database for:", val, "\n")
+		print( "No valid data found in database for:", val, "\n" )
 		return None
 
 	aux_key = get_aux_key(path_key)
-	sorted_data = create_dataframe(filtered_data, status, aux_key)
-	sorted_data["CONF"] = sorted_data["CONF"].apply(lambda x: x[:fixed_length].ljust(fixed_length))
-	sorted_data["ICONST_idx"] = ICONST_indices
+	sorted_data = create_dataframe( filtered_data, status, aux_key )
+	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply(lambda x: x[ :fixed_length ].ljust( fixed_length ) )
+	sorted_data[ "ICONST_idx" ] = ICONST_indices
+	
+	sorted_data = add_suggestions( sorted_data )
+	cols = [col for col in sorted_data.columns if col != "status" ] + [ "status" ]
+	sorted_data = sorted_data.reindex( columns = cols )
+	sorted_data = sorted_data.dropna( axis = 1, how = "all" )
 
 	if verbose:
-		print(sorted_data.to_string(), "\n")
+		print( sorted_data.to_string(), "\n")
 
 	return sorted_data
 

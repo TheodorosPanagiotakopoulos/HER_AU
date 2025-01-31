@@ -114,7 +114,7 @@ def get_standarized_ICONST_data( iconst_data ):
 		H_idx, O_idx = iconst_data
 		return H_idx, O_idx, np.nan
 	elif len( iconst_data ) == 3:
-		O_idx, H_idx, H_cation_idx = data_ICONST
+		O_idx, H_idx, H_cation_idx = iconst_data
 		return H_idx, O_idx, H_cation_idx
 	else:
 		raise ValueError( "ICONST file must have 2 or 3 lines" )
@@ -178,13 +178,22 @@ def get_distances( path_to_SG_simulation, cation_type, verbose = False ):
 	O_position = system.positions[ O_idx ]
 	closest_H_distance = float( "inf" )
 	closest_H_idx = None
-	
+	runs = get_RUNs( path_to_SG_simulation )
 	if cation_type == "Na":
-		cation_list = get_mols.get_Na_mols( path_to_SG_simulation )
+		if not runs:
+			cation_list = get_mols.get_Na_mols( path_to_SG_simulation )
+		else:
+			cation_list = get_mols.get_Na_mols( path_to_SG_simulation + "/RUN1" )
 	elif cation_type == "N-NH4":
-		cation_list = get_mols.get_NH4_mols( path_to_SG_simulation )
+		if not runs:
+			cation_list = get_mols.get_NH4_mols( path_to_SG_simulation )
+		else:
+			cation_list = get_mols.get_NH4_mols( path_to_SG_simulation + "/RUN1" )
 	elif cation_type == "N-CH3NH3":
-		cation_list = get_mols.get_CH3NH3_mols( path_to_SG_simulation )
+		if not runs:
+			cation_list = get_mols.get_CH3NH3_mols( path_to_SG_simulation )
+		else:
+			cation_list = get_mols.get_CH3NH3_mols( path_to_SG_simulation + "/RUN1" )
 	else:
 		raise ValueError( "Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'." )
 	
@@ -210,7 +219,7 @@ def get_distances( path_to_SG_simulation, cation_type, verbose = False ):
 	if cation_type == "Na":
 		return min_cation_distance, np.nan, np.nan
 	else:
-		H_bond_info = f"{O_idx}-{closest_H_idx}" if closest_H_idx is not None else ""
+		H_bond_info = f"{O_idx}-{closest_H_idx}" if closest_H_idx is not None else  np.nan
 		return min_cation_distance, closest_H_distance, H_bond_info
 
 # Wrapper for get_distances
@@ -340,37 +349,49 @@ def get_aux_key( path_key ):
 	else:
 		return None
 
+
 def process_database_entry( value, filtered_data ):
 	path_key = value[ "path" ].split( "/" )[ -2 ]
 	aux_key = get_aux_key( path_key )
 	if not aux_key:
 		print( "Nothing to report here" )
-		return filtered_data
+		return {}, None
 
 	path_to_SG_simulation = convert( value[ "path" ] )
 	initial_system = get_initial_system( path_to_SG_simulation )
 	data_ICONST = get_data_ICONST( path_to_SG_simulation, verbose = False )
 
-	if "Na" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+	if len( data_ICONST ) == 2:
+		H_idx, O_idx = data_ICONST
+		ICONST_idx = f"{O_idx}-{H_idx}"
+	elif len( data_ICONST ) == 3:
+		O_idx, H_H2O_idx, H_cation_idx = data_ICONST
+		ICONST_idx = f"{O_idx}-{H_H2O_idx}-{H_cation_idx}"
+	else:
+		raise ValueError( "Invalid ICONST data format." )
+
+	if "Na" in f"bar_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }":
 		cation = "Na"
-	elif "NH4" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+	elif "NH4" in f"bar_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }":
 		cation = "N-NH4"
-	elif "CH3NH3" in f"bar_{aux_key}_{value['path'].split('/')[-1]}":
+	elif "CH3NH3" in f"bar_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }":
 		cation = "N-CH3NH3"
 	else:
 		raise ValueError( "Unsupported cation type." )
 
 	min_cation_distance, closest_H_distance, H_bond_info = get_distances( path_to_SG_simulation, cation )
-
 	min_H_Au_dist = get_initial_H_Au_distance( path_to_SG_simulation )
 
-	filtered_data[f"bar_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ]}"] = get_barrier( path_to_SG_simulation )
-	filtered_data[f"Dist(H-Au)_{value['path'].split( '/' )[ -1 ] }"] = min_H_Au_dist
-	filtered_data[f"Dist(O-cation)_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }" ] = min_cation_distance
-	filtered_data[f"Dist(O-H)_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }" ] = closest_H_distance
-	filtered_data[f"Bond_data_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }" ] = H_bond_info
+	updated_data = {
+		f"bar_{aux_key}_{value['path'].split( '/' )[ -1 ] }": get_barrier(path_to_SG_simulation),
+		f"Dist(H-Au)_{value['path'].split( '/' )[ -1 ] }": min_H_Au_dist,
+		f"Dist(O-cation)_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }": min_cation_distance,
+		f"Dist(O-H)_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }": closest_H_distance,
+		f"Bond_data_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }": H_bond_info,
+	}
 
-	return filtered_data
+	return updated_data, ICONST_idx
+
 
 def create_dataframe( filtered_data, status, aux_key ):
 	data = pd.DataFrame()
@@ -397,6 +418,8 @@ def create_dataframe( filtered_data, status, aux_key ):
 	data[ "O-H-index" ] = bond_data
 	data[ "status" ] = status
 	
+	data = data.dropna( axis = 1, how = "all" )
+
 	pd.set_option( "display.colheader_justify", "left" )
 	data.style.set_properties( **{ "text-align": "center" } )
 
@@ -405,7 +428,8 @@ def create_dataframe( filtered_data, status, aux_key ):
 def add_suggestions( sorted_data ):
 	suggestions = list()
 	if ( "ICONST_idx" not in sorted_data.keys() ): 
-		sorted_data = sorted_data.drop( [ "O-H_distance", "O-H-index" ], axis = 1 )
+		print( "skipping" )
+		#sorted_data = sorted_data.drop( [ "O-H_distance", "O-H-index" ], axis = 1 )
 	else:
 		for i, j in zip(sorted_data[ "O-H-index" ], sorted_data[ "ICONST_idx" ] ):
 			if i.split( "-" )[ -1 ] != j.split( "-" )[ -1 ]:
@@ -417,64 +441,67 @@ def add_suggestions( sorted_data ):
 		sorted_data[ "propose" ] = suggestions
 	return sorted_data
 
-def get_barrier_from_db( database, val, fixed_length = 45, verbose = False ):
+
+def get_barrier_from_db(database, val, fixed_length=45, verbose=False):
 	filtered_data = {}
-	status = list()
-	
-	for key, value in database[val].items():
+	status = []
+	ICONST_indices = []
+
+	for key, value in database[ val ].items():
 		if value[ "note" ] in [ "Good", "Bad" ]:
-			status.append( value[ "note" ] )
-			filtered_data = process_database_entry( value, filtered_data )
-		path_key = value[ "path" ].split( "/" )[ -2 ]
+			status.append(value["note"])
+			updated_data, ICONST_idx = process_database_entry(value, filtered_data)
+			filtered_data.update( updated_data )
+			ICONST_indices.append( ICONST_idx )
+	path_key = value[ "path" ].split( "/" )[ -2 ]
 
 	if not filtered_data:
-		print( "No valid data found in database for:", val, "\n" )
+		print("No valid data found in database for:", val, "\n")
 		return None
-	
-	aux_key = get_aux_key( path_key )
-	sorted_data = create_dataframe( filtered_data, status, aux_key)
-	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply( lambda x: x[ :fixed_length ].ljust(fixed_length ) )
-	sorted_data = add_suggestions( sorted_data )
+
+	aux_key = get_aux_key(path_key)
+	sorted_data = create_dataframe(filtered_data, status, aux_key)
+	sorted_data["CONF"] = sorted_data["CONF"].apply(lambda x: x[:fixed_length].ljust(fixed_length))
+	sorted_data["ICONST_idx"] = ICONST_indices
 
 	if verbose:
-		print( sorted_data.to_string(), "\n" )
+		print(sorted_data.to_string(), "\n")
 
 	return sorted_data
 
-	
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )	
 	
-	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
+	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
 
-	Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
 	
-	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 	
-	#NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
+	NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
-	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
 
 
-	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
+	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
 
-	#NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
+	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
 
 
 	#CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )

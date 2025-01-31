@@ -329,11 +329,11 @@ def load_database( database_file ):
 	return database
 
 def get_aux_key( path_key ):
-	if path_key in [ "1_Na_H2O_dissociation_from_hydration_shell", "5_Na_H2O_dissociation_from_hydration_shell", "5_Na_H2O_dissociation_from_hydration_shell", "1_NH4_H2O_dissociation_from_hydration_shell", "3_NH4_H2O_dissociation_from_hydration_shell", "5_NH4_H2O_dissociation_from_hydration_shell", "1_CH3NH3_H2O_dissociation_from_hydration_shell", "3_CH3NH3_H2O_dissociation_from_hydration_shell", "5_CH3NH3_H2O_dissociation_from_hydration_shell"  ]:
+	if path_key in [ "H2O_from_hydration_shell_splitting", "H2O_splitting_from_NH4_hydration_shell", "H2O_splitting_from_CH3NH3_hydration_shell" ]:
 		return "hyd_shell"
-	elif path_key in [ "1_Na_H2O_dissociation_NOT_from_hydration_shell", "3_Na_H2O_dissociation_NOT_from_hydration_shell", "5_Na_H2O_dissociation_NOT_from_hydration_shell", "1_NH4_H2O_dissociation_NOT_from_hydration_shell", "5_NH4_H2O_dissociation_NOT_from_hydration_shell", "5_NH4_H2O_dissociation_NOT_from_hydration_shell", " ]:
+	elif path_key in [ "free_H2O_splitting", "H2O_splitting_NOT_from_NH4_hydration_shell", "H2O_splitting_NOT_from_CH3NH3_hydration_shell" ]:
 		return "NO_hyd_shell"
-	elif path_key in ["NH4_splitting", "CH3NH3_splitting"]:
+	elif path_key in [ "NH4_splitting", "CH3NH3_splitting" ]:
 		return path_key
 	elif path_key == "shuttling":
 		return f"{path_key}_shuttling"
@@ -417,14 +417,13 @@ def get_barrier_from_db(database, val, fixed_length = 45, verbose = False):
 		if value[ "note" ] in [ "Good", "Bad" ]:
 			status.append( value[ "note" ] )
 			filtered_data = process_database_entry( value, filtered_data )
+		path_key = value[ "path" ].split( "/" )[ -2 ]
 
 	if not filtered_data:
 		print( "No valid data found in database for:", val, "\n" )
 		return None
 	
-	print( val )
-	aux_key = get_aux_key( val )
-	print( aux_key )
+	aux_key = get_aux_key( path_key )
 	sorted_data = create_dataframe( filtered_data, status, aux_key)
 	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply( lambda x: x[ :fixed_length ].ljust(fixed_length ) )
 	#sorted_data = add_suggestions( sorted_data )

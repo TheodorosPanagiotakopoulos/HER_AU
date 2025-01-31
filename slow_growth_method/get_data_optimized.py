@@ -435,23 +435,27 @@ def create_dataframe( filtered_data, status, aux_key ):
 
 	return data.sort_values( by= "barrier" )
 
+# Adds suggestions based on a comparison between "O-H-index" and "ICONST_idx".
+# sorted_data: A pandas DataFrame containing sorted data with "O-H-index" and "ICONST_idx".
+# Returns: The updated DataFrame with a new "propose" column containing suggestions or NaN values.
 def add_suggestions( sorted_data ):
 	suggestions = list()
-	#if ( "ICONST_idx" not in sorted_data.keys() ): 
-	#	print( "skipping" )
-	#	#sorted_data = sorted_data.drop( [ "O-H_distance", "O-H-index" ], axis = 1 )
-	#else:
 	for i, j in zip(sorted_data[ "O-H-index" ], sorted_data[ "ICONST_idx" ] ):
 		if i.split( "-" )[ -1 ] != j.split( "-" )[ -1 ]:
 			print( "first" )
-			suggestions.append(f"{ i.split( '-' )[ 0 ] } { j.split( '-' )[ 1 ] } { i.split( '-' )[ -1 ] }")
+			suggestions.append(f"{ i.split( '-' )[ 0 ] } { j.split( '-' )[ 1 ] } { i.split( '-' )[ -1 ] }" )
 		else:
 			print( "sec" )
 			suggestions.append( np.nan )
 	sorted_data[ "propose" ] = suggestions
 	return sorted_data
 
-
+# Retrieves barrier data from the database and processes it into a structured DataFrame.
+# database: A dictionary containing the database with relevant entries.
+# val: The key for the specific dataset to be retrieved from the database.
+# fixed_length: The length to which the "CONF" column entries should be padded/truncated. Default is 45.
+# verbose: If True, prints the DataFrame. Default is False.
+# Returns: A sorted pandas DataFrame containing processed data, or None if no valid data is found.
 def get_barrier_from_db(database, val, fixed_length=45, verbose=False):
 	filtered_data = {}
 	status = []

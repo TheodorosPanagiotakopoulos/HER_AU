@@ -442,20 +442,15 @@ def create_dataframe( filtered_data, status, aux_key ):
 # Returns: The updated DataFrame with a new "suggest" column containing suggestions or NaN values.
 def add_suggestions( sorted_data ):
 	suggestions = list()
-	for i, j in zip(sorted_data[ "O-H-index" ], sorted_data[ "ICONST_idx" ] ):
-		print( "---" * 4 )
-		#if np.isnan( float( i ) ) or np.isnan( float( j ) ):
-		if ( isinstance( i, float ) and np.isnan( i ) ): 
-			print( "test passed " )
-			#suggestions.append( np.nan )
-			##return sorted_data
-		#else:
-		#	if i.split( "-" )[ -1 ] != j.split( "-" )[ -1 ]:
-		#		suggestions.append(f"{ i.split( '-' )[ 0 ] } { j.split( '-' )[ 1 ] } { i.split( '-' )[ -1 ] }" )
-		#	else:
-		#		suggestions.append( np.nan )
-	#sorted_data[ "suggest" ] = suggestions
-	#return sorted_data
+	for i, j in zip( sorted_data[ "O-H-index" ], sorted_data[ "ICONST_idx" ] ):
+		if isinstance( i, float ) and np.isnan( i ):
+			suggestions.append( np.nan )
+		elif isinstance( i, str ):
+			suggestions.append(f"{ i.split( '-' )[ 0 ] } { j.split( '-' )[ 1 ] } { i.split( '-' )[ -1 ] }" )
+		else:
+			suggestions.append( np.nan )
+	sorted_data[ "suggest" ] = suggestions
+	return sorted_data
 
 # Retrieves barrier data from the database and processes it into a structured DataFrame.
 # database: A dictionary containing the database with relevant entries.
@@ -463,7 +458,7 @@ def add_suggestions( sorted_data ):
 # fixed_length: The length to which the "CONF" column entries should be padded/truncated. Default is 45.
 # verbose: If True, prints the DataFrame. Default is False.
 # Returns: A sorted pandas DataFrame containing processed data, or None if no valid data is found.
-def get_barrier_from_db( database, val, fixed_length = 45, verbose = False):
+def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 	filtered_data = {}
 	status = list()
 	ICONST_indices = list()
@@ -485,7 +480,7 @@ def get_barrier_from_db( database, val, fixed_length = 45, verbose = False):
 	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply(lambda x: x[ :fixed_length ].ljust( fixed_length ) )
 	sorted_data[ "ICONST_idx" ] = ICONST_indices
 	
-	#sorted_data = add_suggestions( sorted_data )
+	sorted_data = add_suggestions( sorted_data )
 	sorted_data = sorted_data.sort_values( by = "barrier" ).reset_index( drop = True )
 	
 	cols = [ col for col in sorted_data.columns if col != "status" ] + [ "status" ]
@@ -500,28 +495,29 @@ if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )	
 
-	'''	
 	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
 	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
+
 
 	Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
 	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
+
 	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
-
+	
 	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	
 
-	'''
 	NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 	
 	NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	'''	
 	NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
 	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+
 
 	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
@@ -530,6 +526,7 @@ if __name__ == "__main__":
 	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
 
 	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
+
 
 	CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 
@@ -556,4 +553,3 @@ if __name__ == "__main__":
 	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
 	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
-	'''

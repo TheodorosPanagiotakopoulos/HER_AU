@@ -472,10 +472,10 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 
 	aux_key = get_aux_key( path_key )
 	sorted_data = create_dataframe( filtered_data, status, aux_key )
-	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply(lambda x: x[ :fixed_length ].ljust( fixed_length ) )
+	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply( lambda x: x[ :fixed_length ].ljust( fixed_length ) )
 	sorted_data[ "ICONST_idx" ] = ICONST_indices
 	
-	sorted_data = add_suggestions( sorted_data )
+	#sorted_data = add_suggestions( sorted_data )
 	sorted_data = sorted_data.sort_values( by = "barrier" ).reset_index( drop = True )
 	
 	cols = [ col for col in sorted_data.columns if col != "status" ] + [ "status" ]
@@ -484,6 +484,9 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 	if not sorted_data[ "CONF" ].astype( str ).str.contains( "Na", na = False ).any():
 		sorted_data = sorted_data.drop(columns=[ "O-Na_distance" ] )
 	
+	#if not sorted_data[ "CONF" ].astype( str ).str.contains( "shuttling", na = False ).any():
+	#	sorted_data = sorted_data.drop(columns=[ "suggest" ] )
+
 	sorted_data = sorted_data.dropna( axis = 1, how = "all" )
 
 	if verbose:
@@ -495,19 +498,19 @@ if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )	
 
-	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
+	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
 
 
-	Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
 
-	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 	
-	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
 
 	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
@@ -516,7 +519,7 @@ if __name__ == "__main__":
 	
 	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
-	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
 
 
 	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
@@ -534,7 +537,7 @@ if __name__ == "__main__":
 
 	#CH3NH3_1_splitting = get_barrier_from_db( data, "1_CH3NH3_spliting", verbose = True )
 
-	#CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", verbose = True )
+	CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", verbose = True )
 
 
 	#CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
@@ -543,7 +546,7 @@ if __name__ == "__main__":
 
 	#CH3NH3_3_splitting = get_barrier_from_db( data, "3_CH3NH3_spliting", verbose = True )
 
-	#CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", verbose = True )
+	CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", verbose = True )
 
 
 	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
@@ -552,4 +555,4 @@ if __name__ == "__main__":
 	
 	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
-	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
+	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )

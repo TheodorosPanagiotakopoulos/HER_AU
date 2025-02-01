@@ -196,30 +196,30 @@ def get_distances( path_to_SG_simulation, cation_type, verbose = False ):
 		else:
 			cation_list = get_mols.get_CH3NH3_mols(path_to_SG_simulation + "/RUN1")
 	else:
-		raise ValueError("Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'.")
+		raise ValueError( "Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'." )
 
 	central_atom_positions = [system.positions[cation_group[0]] for cation_group in cation_list]
 	min_cation_distance = get_min_distance(O_position, central_atom_positions)
 
-	if cation_type in ["N-NH4", "N-CH3NH3"]:
-		H_positions = []
-		H_indices_list = []
+	if cation_type in [ "N-NH4", "N-CH3NH3" ]:
+		H_positions = list()
+		H_indices_list = list()
 		for cation_group in cation_list:
-			for H_idx in cation_group[1:]:
-				H_positions.append(system.positions[H_idx])
-				H_indices_list.append(H_idx)
+			for H_idx in cation_group[ 1: ]:
+				H_positions.append( system.positions[ H_idx ] )
+				H_indices_list.append( H_idx )
 
 		if H_positions:
-			distances = [np.linalg.norm(O_position - H_pos) for H_pos in H_positions]
-			closest_idx_in_list = int(np.argmin(distances))
-			closest_H_distance = distances[closest_idx_in_list]
-			closest_H_idx = H_indices_list[closest_idx_in_list]
+			distances = [ np.linalg.norm( O_position - H_pos ) for H_pos in H_positions ]
+			closest_idx_in_list = int( np.argmin( distances ) )
+			closest_H_distance = distances[ closest_idx_in_list ]
+			closest_H_idx = H_indices_list[ closest_idx_in_list ]
 		else:
 			closest_H_distance = np.nan
 			closest_H_idx = np.nan
 
 	if cation_type == "Na":
-		return round( min_cation_distance, 2), np.nan, np.nan
+		return round( min_cation_distance, 2 ), np.nan, np.nan
 	else:
 		H_bond_info = f"{O_idx}-{closest_H_idx}" if closest_H_idx is not None else np.nan
 		return round( min_cation_distance, 2 ), round( closest_H_distance, 2 ), H_bond_info
@@ -432,7 +432,7 @@ def create_dataframe( filtered_data, status, aux_key ):
 	
 
 	pd.set_option( "display.colheader_justify", "left" )
-	#data.style.set_properties( **{ "text-align": "center" } )
+	data.style.set_properties( **{ "text-align": "center" } )
 	#data = data.sort_values( by = "barrier" ).reset_index( drop = True )
 
 	return data
@@ -471,7 +471,7 @@ def get_barrier_from_db( database, val, fixed_length = 45, verbose = False):
 	for key, value in database[ val ].items():
 		if value[ "note" ] in [ "Good" ]: #[ "Good", "Bad" ]:
 			status.append( value[ "note" ] )
-			updated_data, ICONST_idx = process_database_entry(value, filtered_data)
+			updated_data, ICONST_idx = process_database_entry( value, filtered_data )
 			filtered_data.update( updated_data )
 			ICONST_indices.append( ICONST_idx )
 	path_key = value[ "path" ].split( "/" )[ -2 ]

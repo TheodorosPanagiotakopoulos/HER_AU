@@ -1,3 +1,4 @@
+et_data_optimized.py
 import os
 import sys
 import gzip
@@ -450,6 +451,30 @@ def add_suggestions( sorted_data ):
 	sorted_data[ "suggest" ] = suggestions
 	return sorted_data
 
+# Cleans the given DataFrame based on conditions in the "CONF" column.
+# - Drops specific columns based on whether "CONF" contains certain substrings.
+# - Removes columns that contain only NaN values.
+# dataframe: A pandas DataFrame containing sorted data with a "CONF" column.
+# Returns: The cleaned DataFrame with unnecessary columns removed.
+def get_sorted_data_cleaned( dataframe ):
+	conf_series = dataframe[ "CONF" ].astype( str )
+	drop_columns = list()
+
+	if not conf_series.str.contains( "Na", na = False ).any():
+		drop_columns.append( "D(O-Na)" )
+
+	if conf_series.str.contains( "splitting", na = False).any():
+		drop_columns.extend( [ "suggest", "I(O-H)" ] )
+
+	if conf_series.str.contains( "hyd_shell", na = False ).any():
+		drop_columns.append( "suggest" )
+
+	dataframe = dataframe.drop( columns = [ col for col in drop_columns if col in dataframe.columns ] )
+	dataframe = dataframe.dropna( axis = 1, how = "all" )
+
+	return dataframe
+
+
 # Retrieves barrier data from the database and processes it into a structured DataFrame.
 # database: A dictionary containing the database with relevant entries.
 # val: The key for the specific dataset to be retrieved from the database.
@@ -484,19 +509,7 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 	cols = [ col for col in sorted_data.columns if col != "status" ] + [ "status" ]
 	sorted_data = sorted_data.reindex( columns = cols )
 	
-	if not sorted_data[ "CONF" ].astype( str ).str.contains( "Na", na = False ).any():
-		sorted_data = sorted_data.drop( columns = [ "D(O-Na)" ] )
-
-	if sorted_data[ "CONF" ].astype( str ).str.contains( "splitting", na = False ).any():
-		sorted_data = sorted_data.drop( columns = [ "suggest", "I(O-H)" ] )
-
-	if sorted_data[ "CONF" ].astype( str ).str.contains( "hyd_shell", na = False ).any():
-		sorted_data = sorted_data.drop( columns=[ "suggest" ] ) 
-
-	#if not sorted_data[ "CONF" ].astype( str ).str.contains( "shuttling", na = False ).any():
-	#	sorted_data = sorted_data.drop(columns=[ "suggest" ] )
-
-	sorted_data = sorted_data.dropna( axis = 1, how = "all" )
+	sorted_data = get_sorted_data_cleaned( sorted_data )
 
 	if verbose:
 		print( sorted_data.to_string(), "\n")
@@ -565,3 +578,4 @@ if __name__ == "__main__":
 	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
 	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
+	'''

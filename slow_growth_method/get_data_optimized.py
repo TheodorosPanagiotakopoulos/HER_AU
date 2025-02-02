@@ -1,4 +1,3 @@
-et_data_optimized.py
 import os
 import sys
 import gzip
@@ -124,23 +123,29 @@ def get_standarized_ICONST_data( iconst_data ):
 # path_to_SG_calculation: The path to the SG calculation directory.
 # verbose: A flag (string) to control whether the minimum distance is printed ("True" for printing, default is "False").
 # Returns: The minimum distance between the "H" atom and any "Au" atom, rounded to 2 decimal places.
-def get_initial_H_Au_distance( path_to_SG_simulation, verbose = False ):
+def get_initial_H_Au_distance(path_to_SG_simulation, verbose=False):
 	distance_H_to_Au = list()
 	os.chdir( path_to_SG_simulation )
 	runs = get_RUNs( path_to_SG_simulation )
 	data_ICONST = get_data_ICONST( path_to_SG_simulation )
-	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( data_ICONST )	
+	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( data_ICONST )
+
 	if not runs:
 		system = read( "POSCAR" )
 	else:
 		system = read( "RUN1/POSCAR" )
 	au_indices = get_element_indices( system, "Au" )
+
 	for au_idx in au_indices:
-		distance_H_to_Au.append( np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_idx ] ) )
-	min_H_Au_dist = round( min( distance_H_to_Au ), 2 )
+		distance_H_to_Au.append( ( np.linalg.norm( system.positions[ au_idx ] - system.positions[ H_idx ] ), au_idx ) )
+
+	min_H_Au_dist, Au_idx = min( distance_H_to_Au, key=lambda x: x[ 0 ] )
+	min_H_Au_dist = round( min_H_Au_dist, 2 )
+
 	if verbose:
-		print( "min_H_Au_dist: ", min_H_Au_dist )	
-	return min_H_Au_dist
+		print("min_H_Au_dist:", min_H_Au_dist, "| Closest Au_idx:", Au_idx )
+
+	return min_H_Au_dist,  str( H_idx ) + "-" + str( Au_idx )
 
 # Retrieves the initial system configuration from a SG simulation.
 # path_to_SG_simulation: The path to the SG simulation directory.
@@ -383,11 +388,12 @@ def process_database_entry( value, filtered_data ):
 		raise ValueError( "Unsupported cation type." )
 
 	min_cation_distance, closest_H_distance, H_bond_info = get_distances( path_to_SG_simulation, cation )
-	min_H_Au_dist = get_initial_H_Au_distance( path_to_SG_simulation )
+	min_H_Au_dist, H_Au_idx = get_initial_H_Au_distance( path_to_SG_simulation )
 
 	updated_data = {
 		f"bar_{aux_key}_{value['path'].split( '/' )[ -1 ] }": get_barrier(path_to_SG_simulation),
 		f"Dist(H-Au)_{value['path'].split( '/' )[ -1 ] }": min_H_Au_dist,
+		f"Index(H-Au)_{value[ 'path' ].split( '/' )[ -1 ] }": H_Au_idx,
 		f"Dist(O-cation)_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }": min_cation_distance,
 		f"Dist(O-H)_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }": closest_H_distance,
 		f"Bond_data_{aux_key}_{value[ 'path' ].split( '/' )[ -1 ] }": H_bond_info,
@@ -402,7 +408,7 @@ def process_database_entry( value, filtered_data ):
 # Returns: A sorted pandas DataFrame based on barrier values.
 def create_dataframe( filtered_data, status, aux_key ):
 	data = pd.DataFrame()
-	names, barriers, distances_H_Au, distances_O_cation, distances_O_H, bond_data = [], [], [], [], [], []
+	names, barriers, distances_H_Au, index_H_Au, distances_O_cation, distances_O_H, bond_data = [], [], [], [], [], [], []
 
 	for key in filtered_data:
 		if key.startswith( "bar" ):
@@ -410,6 +416,8 @@ def create_dataframe( filtered_data, status, aux_key ):
 			barriers.append( filtered_data[ key ] )
 		elif key.startswith( "Dist(H-Au)_" ):
 			distances_H_Au.append( filtered_data[ key ] )
+		elif key.startswith( "Index(H-Au)_" ):
+			index_H_Au.append( filtered_data[ key ] )
 		elif key.startswith( "Dist(O-cation)_" ):
 			distances_O_cation.append( filtered_data[ key ] )
 		elif key.startswith( "Dist(O-H)" ):
@@ -420,6 +428,7 @@ def create_dataframe( filtered_data, status, aux_key ):
 	data[ "CONF" ] = names
 	data[ "barrier" ] = barriers
 	data[ "D(H-Au)" ] = distances_H_Au
+	data[ "I(H-Au)" ] = index_H_Au
 	data[ "D(O-Na)" ] = distances_O_cation
 	if aux_key and "splitting" not in aux_key:
 		data[ "D(O-H)" ] = distances_O_H
@@ -433,6 +442,10 @@ def create_dataframe( filtered_data, status, aux_key ):
 
 	return data
 
+#The function will add a suggestion only if the hydrogen (H) of the nitrogen (N) group in the cation, 
+#which is closer to the oxygen (O) of the H2O molecule that will dissociate, is different from the hydrogen (H) of the nitrogen (N) group 
+#in the cation listed in the ICONST file. In other words, it will suggest performing a simulation using the hydrogen (H) of the nitrogen (N)
+#group in the cation that is closer to the H₂O molecule that will dissociate.
 # Adds suggestions based on a comparison between "I(O-H)" and "ICONST".
 # sorted_data: A pandas DataFrame containing sorted data with "I(O-H)" and "ICONST".
 # Returns: The updated DataFrame with a new "suggest" column containing suggestions or NaN values.
@@ -519,7 +532,7 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )	
-	'''
+
 	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
 	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
@@ -534,7 +547,7 @@ if __name__ == "__main__":
 	
 	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	'''
+
 	NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 	
 	NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
@@ -542,8 +555,8 @@ if __name__ == "__main__":
 	NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
 	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+
 	
-	'''
 	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
 	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
@@ -578,4 +591,3 @@ if __name__ == "__main__":
 	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
 	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
-	'''

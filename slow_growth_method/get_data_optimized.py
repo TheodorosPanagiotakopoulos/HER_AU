@@ -1,4 +1,4 @@
-kimport os
+import os
 import sys
 import gzip
 import glob
@@ -172,51 +172,57 @@ def get_min_distance( reference_position, positions ):
 # verbose: Prints debug info if True.
 # Returns: (O–cation distance, O–H distance, H-bond info).
 def get_distances( path_to_SG_simulation, cation_type, verbose = False ):
-	system = get_initial_system(path_to_SG_simulation )
+	system = get_initial_system( path_to_SG_simulation )
 
-	iconst_data = get_data_ICONST(path_to_SG_simulation, verbose)
-	if len(iconst_data) == 2:
+	iconst_data = get_data_ICONST( path_to_SG_simulation, verbose )
+	if len( iconst_data ) == 2:
 		H_idx, O_idx = iconst_data
 		H_cation_idx = np.nan
 	else:
 		O_idx, H_idx, H_cation_idx = iconst_data
 
-	O_position = system.positions[O_idx]
-	closest_H_distance = float("inf")
+	O_position = system.positions[ O_idx ]
+	closest_H_distance = float( "inf" )
 	closest_H_idx = None
 
 	runs = get_RUNs( path_to_SG_simulation )
 	if cation_type == "Na":
 		if not runs:
-			cation_list = get_mols.get_Na_mols(path_to_SG_simulation)
+			cation_list = get_mols.get_Na_mols( path_to_SG_simulation )
 		else:
-			cation_list = get_mols.get_Na_mols(path_to_SG_simulation + "/RUN1")
+			cation_list = get_mols.get_Na_mols( path_to_SG_simulation + "/RUN1" )
 	elif cation_type == "N-NH4":
 		if not runs:
-			cation_list = get_mols.get_NH4_mols(path_to_SG_simulation)
+			cation_list = get_mols.get_NH4_mols( path_to_SG_simulation )
 		else:
-			cation_list = get_mols.get_NH4_mols(path_to_SG_simulation + "/RUN1")
+			cation_list = get_mols.get_NH4_mols( path_to_SG_simulation + "/RUN1" )
 	elif cation_type == "N-CH3NH3":
 		if not runs:
-			cation_list = get_mols.get_CH3NH3_mols(path_to_SG_simulation)
+			cation_list = get_mols.get_CH3NH3_mols( path_to_SG_simulation )
 		else:
-			cation_list = get_mols.get_CH3NH3_mols(path_to_SG_simulation + "/RUN1")
+			cation_list = get_mols.get_CH3NH3_mols( path_to_SG_simulation + "/RUN1" )
 	else:
 		raise ValueError( "Unsupported cation type. Supported types are: 'Na', 'N-NH4', 'N-CH3NH3'." )
 
 	central_atom_positions = [ system.positions[ cation_group[ 0 ] ] for cation_group in cation_list ]
 	min_cation_distance = get_min_distance( O_position, central_atom_positions )
+
 	if cation_type in [ "N-NH4", "N-CH3NH3" ]:
 		H_positions = list()
 		H_indices_list = list()
 		for cation_group in cation_list:
-			for H_idx in cation_group[ 1: ]:
+			if cation_type == "N-NH4":
+				H_atoms = cation_group[ 1: ]
+			elif cation_type == "N-CH3NH3":
+				H_atoms = cation_group[ 1:4 ]
+
+			for H_idx in H_atoms:
 				H_positions.append( system.positions[ H_idx ] )
 				H_indices_list.append( H_idx )
 
 		if H_positions:
-			distances = [ np.linalg.norm( O_position - H_pos ) for H_pos in H_positions ]
-			closest_idx_in_list = int( np.argmin( distances ) )
+			distances = [ np.linalg.norm(O_position - H_pos) for H_pos in H_positions ]
+			closest_idx_in_list = int( np.argmin(distances ) )
 			closest_H_distance = distances[ closest_idx_in_list ]
 			closest_H_idx = H_indices_list[ closest_idx_in_list ]
 		else:
@@ -228,6 +234,7 @@ def get_distances( path_to_SG_simulation, cation_type, verbose = False ):
 	else:
 		H_bond_info = f"{O_idx}-{closest_H_idx}" if closest_H_idx is not None else np.nan
 		return round( min_cation_distance, 2 ), round( closest_H_distance, 2 ), H_bond_info
+
 
 ################################# SLOW GROWTH METHOD #################################
 
@@ -533,46 +540,46 @@ if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
 	data = load_database( path + "database_for_theo.js" )	
 
-	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
+	Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
 
 
-	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
 
-	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 	
-	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
 
-	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 	
-	#NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
+	NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
-	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
 
 	
-	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
+	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
 
-	#NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
+	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
 
 
-	#CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
+	CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#CH3NH3_1_NO_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	CH3NH3_1_NO_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#CH3NH3_1_splitting = get_barrier_from_db( data, "1_CH3NH3_spliting", verbose = True )
+	CH3NH3_1_splitting = get_barrier_from_db( data, "1_CH3NH3_spliting", verbose = True )
 
-	#CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", verbose = True )
+	CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", verbose = True )
 
 
 	CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
@@ -584,11 +591,10 @@ if __name__ == "__main__":
 	CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", verbose = True )
 
 
-	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
+	CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 	
-	#CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
+	CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
-	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
-
+	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )

@@ -119,14 +119,22 @@ def get_standarized_ICONST_data( iconst_data ):
 	else:
 		raise ValueError( "ICONST file must have 2 or 3 lines" )
 
-def get_initial_H_N_distance( path_to_SG_simulation, verbose = True ):
+# Computes the initial distance between Oxygen and a cation-associated Hydrogen, if present.
+# path_to_SG_simulation: Path to the simulation data directory.
+# verbose: Boolean flag for printing the distance (default: False).
+# Returns: The Euclidean distance between Oxygen (O_idx) and cation-associated Hydrogen (H_cation_idx), rounded to 2 decimal places.
+# If no valid H_cation_idx is found, returns NaN.
+def get_initial_H_N_distance( path_to_SG_simulation, verbose = False ):
 	system = get_initial_system( path_to_SG_simulation )
 	iconst_data = get_data_ICONST( path_to_SG_simulation )
-	O_idx, H_idx, H_cation_idx = get_standarized_ICONST_data( iconst_data )
-	if np.isnan( H_cation_idx ) == False:
-		return  round( np.linalg.norm( system.positions[ O_idx ] - system.positions[ H_cation_idx ] ), 2 )
+	O_idx, H_idx, H_cation_idx = get_standarized_ICONST_data(iconst_data)
+	if not np.isnan( H_cation_idx ):
+		distance = round( np.linalg.norm( system.positions[ O_idx ] - system.positions[ H_cation_idx ] ), 2 )
 	else:
-		return np.nan
+		distance = np.nan
+	if verbose:
+		print( distance )
+	return distance 
 			
 
 # Calculates the minimum initial distance between the "H" atom and any "Au" atom in the system.

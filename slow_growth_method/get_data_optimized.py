@@ -127,9 +127,10 @@ def get_standarized_ICONST_data( iconst_data ):
 def get_initial_H_N_distance( path_to_SG_simulation, verbose = False ):
 	system = get_initial_system( path_to_SG_simulation )
 	iconst_data = get_data_ICONST( path_to_SG_simulation )
-	O_idx, H_idx, H_cation_idx = get_standarized_ICONST_data(iconst_data)
+	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( iconst_data )
 	if not np.isnan( H_cation_idx ):
 		distance = round( np.linalg.norm( system.positions[ O_idx ] - system.positions[ H_cation_idx ] ), 2 )
+		print( distance )
 	else:
 		distance = np.nan
 	if verbose:
@@ -459,7 +460,7 @@ def create_dataframe( filtered_data, status, aux_key ):
 	data[ "D(H-Au)" ] = distances_H_Au
 	data[ "I(H-Au)" ] = index_H_Au
 	data[ "D(O-Na)" ] = distances_O_cation
-	data[ "Init_D(H-N)" ] = distances_O_cation
+	data[ "Init_D(H-N)" ] = initial_distances_H_N
 	if aux_key and "splitting" not in aux_key:
 		data[ "D(O-H)" ] = distances_O_H
 	data[ "I(O-H)" ] = bond_data
@@ -621,3 +622,4 @@ if __name__ == "__main__":
 	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
 	CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
+

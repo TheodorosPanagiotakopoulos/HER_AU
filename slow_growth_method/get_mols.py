@@ -1,14 +1,15 @@
+et_mols.py 
 import os
+import glob
 import pandas as pd
 import numpy as np
 from ase.io import read
 from scipy.spatial.distance import cdist
-import glob
 
 ################################## H2O molecules ##################################
 
 #H2O molecules in the system
-def get_H2O_mols( poscar, threshold = 1.2, to_print = "False" ):
+def get_H2O_mols( poscar, threshold = 1.2, verbose = False ):
 	system = read( poscar )
 	oxigen_indices = [ i for i, j in enumerate( system ) if j.symbol == "O" ]
 	hydrogen_indices = [ i for i, j in enumerate( system ) if j.symbol == "H" ]
@@ -18,7 +19,7 @@ def get_H2O_mols( poscar, threshold = 1.2, to_print = "False" ):
 		close_hydrogens = [ hydrogen_indices[ i ] for i, j in enumerate( distances ) if j < threshold ]
 		if len( close_hydrogens ) == 2:
 			H2O_mols.append( [ close_hydrogens[ 0 ], i, close_hydrogens[ 1 ] ] )
-	if to_print == "True":
+	if verbose:
 		print( H2O_mols )
 	return ( H2O_mols )
 
@@ -55,16 +56,16 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 ################################## Na molecules ##################################
 
 #Na molecules in the system
-def get_Na_mols( poscar, to_print = "False" ):
-	system = read( poscar )
-	na_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Na" ]
-	if to_print == "True":
+def get_Na_mols( path_to_poscar, verbose = False ):
+	system = read( os.path.join( path_to_poscar, "POSCAR") )
+	na_indices = [  [ i ]  for i, atom in enumerate( system ) if atom.symbol == "Na" ]
+	if verbose:
 		print( na_indices )
 	return na_indices
 
 #Get H2O mols in the Na hydration shell 
 #H2O -> OH + H*
-def get_Na_hydration_shell(poscar, H2O_mols, Na_atoms, distance_threshold=2.6, to_print="False"):
+def get_Na_hydration_shell(poscar, H2O_mols, Na_atoms, distance_threshold=2.6, verbose = False ):
 	system = read(poscar)
 	au_indices = [i for i, atom in enumerate(system) if atom.symbol == "Au"]
 	au_positions = system.positions[au_indices]
@@ -95,7 +96,7 @@ def get_Na_hydration_shell(poscar, H2O_mols, Na_atoms, distance_threshold=2.6, t
 		molecule_results.sort(key=lambda x: float(x["[H1 - Au]"][0].split(" = ")[1]))
 		final_results.extend( molecule_results )
 
-		if to_print == "True":
+		if verbose:
 			for result in molecule_results:
 				print(result)
 			print("\n")
@@ -104,7 +105,7 @@ def get_Na_hydration_shell(poscar, H2O_mols, Na_atoms, distance_threshold=2.6, t
 
 #Get H2O mols NOT in the Na hydration shell 
 #H2O -> OH + H*
-def get_non_Na_hydration_shell( poscar, H2O_mols, Na_atoms, distance_threshold = 2.7, to_print = "False" ):
+def get_non_Na_hydration_shell( poscar, H2O_mols, Na_atoms, distance_threshold = 2.7, verbose = False ):
     system = read( poscar )
     au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
     au_positions = system.positions[ au_indices ]
@@ -129,7 +130,7 @@ def get_non_Na_hydration_shell( poscar, H2O_mols, Na_atoms, distance_threshold =
                 f"{h2_idx}-{closest_au_h2_idx}": round( min_h2_distance_to_au, 3 )
             })
     sorted_list = sorted( non_hydration_H2O, key=lambda d: list(d.values() )[ 1 ] )
-    if to_print == "True":
+    if verbose:
         print( "H2O molecules not in Na hydration shell:" )
         for h2o in sorted_list:
             print( h2o )
@@ -139,8 +140,8 @@ def get_non_Na_hydration_shell( poscar, H2O_mols, Na_atoms, distance_threshold =
 ################################## NH4 molecules ##################################
 
 #NH4 molecules in the system
-def get_NH4_mols( poscar, threshold = 1.2, to_print = "False" ):
-	system = read( poscar )
+def get_NH4_mols( path_to_poscar, threshold = 1.2, verbose = False ):
+	system = read( os.path.join( path_to_poscar, "POSCAR") )
 	nitrogen_indices = [i for i, j in enumerate( system ) if j.symbol == "N" ]
 	hydrogen_indices = [i for i, j in enumerate( system ) if j.symbol == "H" ]
 
@@ -150,14 +151,14 @@ def get_NH4_mols( poscar, threshold = 1.2, to_print = "False" ):
 		close_hydrogens = [ hydrogen_indices[ i ] for i, j in enumerate( distances ) if j < threshold ]
 		if len( close_hydrogens ) == 4:
 			NH4_mols.append( [ i ] + close_hydrogens )
-	if to_print == "True":
+	if verbose:
 		print( NH4_mols )
 	return NH4_mols
 
 #NH4 molecules within the surface threshold
 #For NH4 split
 #NH4 -> NH3 + H*
-def get_NH4_within_surface_threshold(poscar, NH4_mols, distance_threshold = 5.6, to_print = "False" ):
+def get_NH4_within_surface_threshold(poscar, NH4_mols, distance_threshold = 5.6, verbose = False ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -182,7 +183,7 @@ def get_NH4_within_surface_threshold(poscar, NH4_mols, distance_threshold = 5.6,
 			) )
 			NH4_close_to_electrode.append( mol )
 	results.sort( key=lambda x: min( info[ 2 ] for info in x[ 1 ] ) )
-	if to_print == "True":
+	if verbose:
 		for mol, closest_info in results:
 			print( f"Molecule: {mol}" )
 			for h_idx, au_idx, dist in closest_info:
@@ -192,7 +193,7 @@ def get_NH4_within_surface_threshold(poscar, NH4_mols, distance_threshold = 5.6,
 
 #H2O molecules that belong to NH4 hydration shell
 #For H2O dissociation ( H2O -> OH + H* ) if H of H2O is close to electrode
-def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold = 3.1, to_print = "False" ):
+def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold = 3.1, verbose = False ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -239,7 +240,7 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 		molecule_results.sort( key=lambda x: x[ "N-O Distance" ] )
 		final_results.extend( molecule_results )
 
-		if to_print == "True":
+		if verbose:
 			for result in molecule_results:
 				print( result )
 			print( "\n" )
@@ -248,10 +249,10 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 
 #H2O molecules that not belong to NH4 hydration shel
 #H2O -> OH + H*
-def get_non_NH4_hydration_shell(poscar, H2O_mols, NH4_molecules, distance_threshold=3.2, to_print="False"):
-	system = read(poscar)
-	au_indices = [i for i, atom in enumerate(system) if atom.symbol == "Au"]
-	au_positions = system.positions[au_indices]
+def get_non_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold = 3.2, verbose = False ):
+	system = read( poscar )
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
+	au_positions = system.positions[ au_indices ]
 
 	non_hydration_H2O = list()
 
@@ -286,16 +287,16 @@ def get_non_NH4_hydration_shell(poscar, H2O_mols, NH4_molecules, distance_thresh
 
 	sorted_list = sorted(non_hydration_H2O, key=lambda d: list(d.values())[1])
 
-	if to_print == "True":
+	if verbose:
 		print("H2O molecules not in NH4 hydration shell:")
 		for h2o in sorted_list:
-			print(h2o)
+			print( h2o )
 
 	return non_hydration_H2O
 
 #H2O molecules that belong to NH4 hydration shell
 #For shuttling
-def get_NH4_hydration_shell_shuttling( poscar, H2O_mols, NH4_molecules, distance_threshold = 2.6, to_print="False" ):
+def get_NH4_hydration_shell_shuttling( poscar, H2O_mols, NH4_molecules, distance_threshold = 2.6, verbose = False ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -358,7 +359,7 @@ def get_NH4_hydration_shell_shuttling( poscar, H2O_mols, NH4_molecules, distance
 		molecule_results.sort( key=lambda x: float(x[ "H1-Au1" ].split( '= ' )[ 1 ] ) )
 		final_results.extend( molecule_results )
 
-		if to_print == "True":
+		if verbose:
 			for result in molecule_results:
 				print( result )
 			print( "\n" )
@@ -369,8 +370,8 @@ def get_NH4_hydration_shell_shuttling( poscar, H2O_mols, NH4_molecules, distance
 ################################## CH3NH3 molecules ##################################
 
 #CH3NH3 molecules in the system
-def get_CH3NH3_mols( poscar, threshold = 1.2, to_print = "False" ):
-	system = read( poscar )
+def get_CH3NH3_mols( path_to_poscar, threshold = 1.2, verbose = False ):
+	system = read( os.path.join( path_to_poscar, "POSCAR") )
 	nitrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "N" ]
 	hydrogen_indices = [ i for i, j in enumerate(system) if j.symbol == "H" ]
 	carbon_indices = [ i for i, j in enumerate(system) if j.symbol == "C" ]
@@ -386,16 +387,16 @@ def get_CH3NH3_mols( poscar, threshold = 1.2, to_print = "False" ):
 				close_hydrogens_from_carbon = [ hydrogen_indices[ i ] for i, j in enumerate( distances_to_hydrogen_from_carbon ) if j < threshold ]
 				if len( close_hydrogens_from_carbon ) == 3:
 					CH3NH3_mols.append( [ i ] + close_hydrogens + close_carbon + close_hydrogens_from_carbon )
-	if to_print == "True":
+	if verbose:
 		print( "CH3NH3_mols = ", CH3NH3_mols )
 	return CH3NH3_mols
 
 #CH3NH3 molecules within the surface threshold
 ##For CH3NH3 dissociation (best)
 #CH3NH3 -> CH3NH2 + H*
-def get_CH3NH3_within_surface_threshold(poscar, CH3NH3_mols, to_print="False"):
+def get_CH3NH3_within_surface_threshold(poscar, CH3NH3_mols, verbose = False ):
 	system = read( poscar )
-	au_indices = [ i for i, atom in enumerate( system) if atom.symbol == "Au"]
+	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
 
 	results = list()
@@ -418,7 +419,7 @@ def get_CH3NH3_within_surface_threshold(poscar, CH3NH3_mols, to_print="False"):
 		h_results.sort( key=lambda x: x[0] )  # Sort H results by distance
 		results.append( (mol, h_results) )
 
-	if to_print == "True":
+	if verbose:
 		for mol, h_results in results:
 			for dist, H_idx, Au_idx in h_results:
 				print(
@@ -434,7 +435,7 @@ def get_CH3NH3_within_surface_threshold(poscar, CH3NH3_mols, to_print="False"):
 #Get H2O mols in the CH3NH3 hydration shell 
 #For shuttling
 #For H2O -> OH + H* if H of H2O is close to electrode
-def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, to_print="False"):
+def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, verbose = False ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -481,7 +482,7 @@ def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_thre
 		molecule_results.sort( key=lambda x: x[ "N-O Distance" ] )
 		final_results.extend( molecule_results )
 
-		if to_print == "True":
+		if verbose:
 			for result in molecule_results:
 				print(result)
 			print("\n")
@@ -490,7 +491,7 @@ def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_thre
 
 #H2O molecules that not belong to CH3NH3 hydration shel
 #H2O -> OH + H*
-def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, to_print="False"):
+def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, verbose = False ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -528,7 +529,7 @@ def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_
 
 	sorted_list = sorted( non_hydration_H2O, key=lambda d: list( d.values() )[ 1 ] )
 	
-	if to_print == "True":
+	if verbose:
 		print( "H2O molecules not in CH3NH3 hydration shell:" )
 		for h2o in sorted_list:
 			print( h2o )
@@ -538,7 +539,7 @@ def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_
 
 #H2O molecules that belong to NH4 hydration shell
 #For shuttling
-def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 2.6, to_print="False"):
+def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 2.6, verbose = False ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
@@ -602,7 +603,7 @@ def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, dis
 		molecule_results.sort( key=lambda x: float( x[ "H1-Au1" ].split( '= ' )[ 1 ] ) )
 		final_results.extend( molecule_results )
 
-		if to_print == "True":
+		if verbose:
 			for result in molecule_results:
 				print( result )
 			print("\n")
@@ -618,7 +619,7 @@ def get_RUNs( path_to_simulation ):
 	return runs
 
 #Finds the index of the Hydrogen (H) atom in an ICONST file that is moving toward a specified surface.
-def get_H_from_ICONST( iconst, to_print = False ):
+def get_H_from_ICONST( iconst, verbose = False ):
 	first_line = list()
 	second_line = list()
 	with open( iconst ) as file:
@@ -630,7 +631,7 @@ def get_H_from_ICONST( iconst, to_print = False ):
 			lines = [ line.rstrip() for line in file ]
 		first_line =  lines[ 0 ].split( " " ) 
 		H_idx = first_line[ 2 ]
-		if to_print: 
+		if verbose: 
 			print( "ICONST H index: ", H_idx )
 			print( "Actual H index: ", int( H_idx ) - 1 ) 
 		return int( H_idx ) - 1
@@ -642,7 +643,7 @@ def get_H_from_ICONST( iconst, to_print = False ):
 		O_H2O_idx = first_line[ 1 ]
 		H_H2O_idx = first_line[ 2 ]
 		H_cation_idx = second_line[ 2 ]
-		if to_print:
+		if verbose:
 			print( "ICONST O(H2O) index: ", O_H2O_idx )
 			print( "ICONST H(H2O) index: ", H_H2O_idx )
 			print( "ICONST H(cation) index: ", H_cation_idx )
@@ -654,7 +655,7 @@ def get_H_from_ICONST( iconst, to_print = False ):
 		raise ValueError( "ICONST file must NOT contain more than three lines." )
 
 #check if the H atom from ICONST indeed moved to Au
-def get_status( path_to_simulation, threshold_distance = 2.0 ):
+def get_status( path_to_simulation, threshold_distance = 2.2 ):
 	result = False
 	if not os.path.isfile( path_to_simulation + "/CONTCAR" ):
 		return result
@@ -669,7 +670,7 @@ def get_status( path_to_simulation, threshold_distance = 2.0 ):
 	if isinstance( H_info, int ):
 		H_idx = H_info
 		distance_H_to_Au = [ np.linalg.norm(system.positions[ au_idx ] - system.positions[ H_idx ] ) for au_idx in au_indices ]
-		min_H_Au_dist = round( min( distance_H_to_Au ), 3 )
+		min_H_Au_dist =  round( min( distance_H_to_Au ), 3 ) 
 		if min_H_Au_dist < threshold_distance:
 			result = True
 	elif isinstance( H_info, tuple ):
@@ -678,14 +679,13 @@ def get_status( path_to_simulation, threshold_distance = 2.0 ):
 		min_H_Au_dist = round( min( distance_H_to_Au ), 3 )
 		distance_O_to_H_cation = np.linalg.norm( system.positions[ O_idx ] - system.positions[ H_cation_idx ] )
 		initial_distance_O_to_H_cation = np.linalg.norm( initial_system.positions[ O_idx ] - initial_system.positions[ H_cation_idx ] )
-		#print( "initial dist: ", initial_distance_O_to_H_cation )
-		#print( "min H Au dist: ", min_H_Au_dist )
+		print( "initial dist: ", initial_distance_O_to_H_cation )
+		print( "min H Au dist: ", min_H_Au_dist )
 		if min_H_Au_dist < threshold_distance and distance_O_to_H_cation < threshold_distance and initial_distance_O_to_H_cation < threshold_distance:
 			result = True
 	return result
 
-
 if __name__ == "__main__":
-	loc = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/CH3NH3/5_CH3NH3/shuttling/5_CH3NH3_40_H2O_v19"
-	status = get_status( loc + "/CONTCAR", loc + "/ICONST" )
-	print( status )
+	loc = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/NH4/1_NH4/H2O_splitting_from_NH4_hydration_shell/1_NH4_40_H2O_v3/RUN1"
+	NH4 = get_NH4_mols( loc  )
+	print( NH4 )

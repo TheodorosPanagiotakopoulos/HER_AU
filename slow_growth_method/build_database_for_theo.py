@@ -117,7 +117,7 @@ if __name__ == "__main__":
 	NH4_HashMap = { "A" : "/H2O_splitting_from_NH4_hydration_shell/",  "B" :  "/H2O_splitting_NOT_from_NH4_hydration_shell/", "C" : "/NH4_splitting/", "D" : "/shuttling/" }
 	NH4_key_HashMap = { "A" : "_NH4_H2O_dissociation_from_hydration_shell", "B" : "_NH4_H2O_dissociation_NOT_from_hydration_shell", "C" :"_NH4_spliting", "D" : "_NH4_shuttling" }
 	NH4_name = "_NH4_40_H2O_v"
-	for i in [ 1, 3 ]:
+	for i in [ 1, 3, 5 ]:
 		add_to_database( base_NH4 + str( i ) + "_NH4" + NH4_HashMap[ "A" ], str( i ) + NH4_key_HashMap[ "A" ],  str( i ) + NH4_name )
 		add_to_database( base_NH4 + str( i ) + "_NH4" + NH4_HashMap[ "B" ], str( i ) + NH4_key_HashMap[ "B" ],  str( i ) + NH4_name )
 		add_to_database( base_NH4 + str( i ) + "_NH4" + NH4_HashMap[ "C" ], str( i ) + NH4_key_HashMap[ "C" ],  str( i ) + NH4_name )

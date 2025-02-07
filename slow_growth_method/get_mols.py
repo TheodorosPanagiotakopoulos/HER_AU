@@ -1,4 +1,3 @@
-et_mols.py 
 import os
 import glob
 import pandas as pd
@@ -618,7 +617,15 @@ def get_RUNs( path_to_simulation ):
 	runs = glob.glob( os.path.join( path_to_simulation, "RUN*" ) )
 	return runs
 
-#Finds the index of the Hydrogen (H) atom in an ICONST file that is moving toward a specified surface.
+# Retrieves hydrogen-related indices from an ICONST file.
+# If the file has two lines, returns a single H index.
+# If the file has three lines, returns indices for O(H2O), H(H2O), and H(cation).
+# Raises a ValueError if the file has less than two or more than three lines.
+# Parameters:
+#   iconst (str): Path to the ICONST file.
+#   verbose (bool): If True, prints index details for debugging. Default is False.
+# Returns:
+#   int or tuple of ints: The extracted hydrogen-related index or indices.
 def get_H_from_ICONST( iconst, verbose = False ):
 	first_line = list()
 	second_line = list()

@@ -661,7 +661,14 @@ def get_H_from_ICONST( iconst, verbose = False ):
 	else:
 		raise ValueError( "ICONST file must NOT contain more than three lines." )
 
-#check if the H atom from ICONST indeed moved to Au
+# Determines the status of a simulation based on the proximity of hydrogen to gold atoms.
+# Checks if the CONTCAR file exists, retrieves the hydrogen index from ICONST, and calculates distances.
+# Returns True if the minimum hydrogen-gold distance is below the threshold and other conditions are met.
+# Parameters:
+#   path_to_simulation (str): Path to the simulation directory.
+#   threshold_distance (float): The distance threshold to determine interaction. Default is 2.2.
+# Returns:
+#   bool: True if conditions are met, otherwise False.
 def get_status( path_to_simulation, threshold_distance = 2.2 ):
 	result = False
 	if not os.path.isfile( path_to_simulation + "/CONTCAR" ):

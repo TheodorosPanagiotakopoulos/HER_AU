@@ -3,7 +3,6 @@ import glob
 import pandas as pd
 import numpy as np
 from ase.io import read
-
 from scipy.spatial.distance import cdist
 
 ################################## H2O molecules ##################################
@@ -489,6 +488,18 @@ def get_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_thre
 
 	return final_results
 
+# Identifies water molecules that are not part of the CH3NH3 hydration shell.
+# Determines which H2O molecules do not interact with CH3NH3 based on a distance threshold 
+# and calculates their distances to gold atoms.
+# Parameters:
+#   poscar (str): Path to the POSCAR file containing atomic positions.
+#   H2O_mols (list): List of tuples representing the indices of H2O molecules (H1, O, H2).
+#   CH3NH3_molecules (list): List of tuples representing the indices of CH3NH3 atoms 
+#                            (N, H1, H2, H3, C, H4, H5, H6).
+#   distance_threshold (float): Maximum distance threshold for hydration shell interaction. Default is 3.2.
+#   verbose (bool): If True, prints details of non-hydration shell water molecules. Default is False.
+# Returns:
+#   list: A list of dictionaries containing details of water molecules not in the CH3NH3 hydration shell.
 #H2O molecules that not belong to CH3NH3 hydration shel
 #H2O -> OH + H*
 def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 3.2, verbose = False ):

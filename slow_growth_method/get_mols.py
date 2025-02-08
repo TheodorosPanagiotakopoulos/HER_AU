@@ -536,6 +536,18 @@ def get_non_CH3NH3_hydration_shell(poscar, H2O_mols, CH3NH3_molecules, distance_
 	return non_hydration_H2O
 
 
+# Determines the interaction between CH3NH3 and water molecules in a simulation.
+# Analyzes the proximity of hydrogen atoms from CH3NH3 to oxygen in water molecules 
+# and their distances from gold atoms.
+# Parameters:
+#   poscar (str): Path to the POSCAR file containing atomic positions.
+#   H2O_mols (list): List of tuples representing the indices of H2O molecules (H1, O, H2).
+#   CH3NH3_molecules (list): List of tuples representing the indices of CH3NH3 atoms 
+#                            (N, H1, H2, H3, C, H4, H5, H6).
+#   distance_threshold (float): Maximum distance threshold for interactions. Default is 2.6.
+#   verbose (bool): If True, prints details of interactions. Default is False.
+# Returns:
+#   list: A list of dictionaries containing interaction details between CH3NH3, H2O, and Au.
 #H2O molecules that belong to NH4 hydration shell
 #For shuttling
 def get_CH3NH3_hydration_shell_shuttling(poscar, H2O_mols, CH3NH3_molecules, distance_threshold = 2.6, verbose = False ):

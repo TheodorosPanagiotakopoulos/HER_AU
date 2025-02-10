@@ -4,10 +4,11 @@ import gzip
 import glob
 import json
 import getpass
+import get_mols
 import numpy as np
 import pandas as pd
 from ase.io import read
-import get_mols_updated as get_mols
+
 
 # Retrieves the indices of all atoms of a specified element in the given atomic system.
 # system: The atomic system (a list of atoms or an ASE Atoms object).
@@ -437,7 +438,7 @@ def process_database_entry( value, filtered_data ):
 # Returns: A sorted pandas DataFrame based on barrier values.
 def create_dataframe( filtered_data, status, aux_key ):
 	data = pd.DataFrame()
-	names, barriers, distances_H_Au, index_H_Au, distances_O_cation, distances_O_H, initial_distances_H_N, bond_data, runs = [], [], [], [], [], [], [], [], []
+	names, barriers, distances_H_Au, index_H_Au, distances_O_cation, distances_O_H, initial_distances_H_O, bond_data, runs = [], [], [], [], [], [], [], [], []
 
 	for key in filtered_data:
 		if key.startswith( "bar" ):
@@ -452,7 +453,7 @@ def create_dataframe( filtered_data, status, aux_key ):
 		elif key.startswith( "Dist(O-H)" ):
 			distances_O_H.append( filtered_data[ key ] ) 
 		elif key.startswith( "Initial_Dist(O-H)_" ):
-			initial_distances_H_N.append( filtered_data[ key ] )
+			initial_distances_H_O.append( filtered_data[ key ] )
 		elif key.startswith( "Bond_data_" ):
 			bond_data.append( filtered_data[ key ] )
 		elif key.startswith( "RUNS" ):
@@ -463,10 +464,10 @@ def create_dataframe( filtered_data, status, aux_key ):
 	data[ "D(H-Au)" ] = distances_H_Au
 	data[ "I(H-Au)" ] = index_H_Au
 	data[ "D(O-Na)" ] = distances_O_cation
-	data[ "Init_D(H-N)" ] = initial_distances_H_N
+	data[ "Init_D(O-H)" ] = initial_distances_H_O
 	data[ "RUNS" ] = runs
 	if aux_key and "splitting" not in aux_key:
-		data[ "D(O-H)" ] = distances_O_H
+		data[ "Min_D(O-H)" ] = distances_O_H
 	data[ "I(O-H)" ] = bond_data
 	data[ "status" ] = status
 	
@@ -535,7 +536,7 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 	ICONST_indices = list()
 
 	for key, value in database[ val ].items():
-		if value[ "note" ] in [ "Good", "Bad" ]:  #[ "Good", "Bad" ]:
+		if value[ "note" ] in [ "Good" ]:  #[ "Good", "Bad" ]:
 			status.append( value[ "note" ] )
 			updated_data, ICONST_idx = process_database_entry( value, filtered_data )
 			filtered_data.update( updated_data )
@@ -588,29 +589,29 @@ if __name__ == "__main__":
 	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
 
-	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 	
-	#NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 	
-	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
+	NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
-	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
 
 	
-	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
+	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
 
-	#NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
+	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
 	
 	
-	#NH4_5_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	NH4_5_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#NH4_5_NO_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	NH4_5_NO_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#NH4_5_splitting = get_barrier_from_db( data, "5_NH4_spliting", verbose = True )
+	NH4_5_splitting = get_barrier_from_db( data, "5_NH4_spliting", verbose = True )
 
 	NH4_5_shuttling = get_barrier_from_db( data, "5_NH4_shuttling", verbose = True )		
 	
@@ -623,6 +624,7 @@ if __name__ == "__main__":
 
 	#CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", verbose = True )
 	
+	
 	#CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 
 	#CH3NH3_3_NO_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
@@ -631,6 +633,7 @@ if __name__ == "__main__":
 
 	#CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", verbose = True )
 	
+	
 	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 	
 	#CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
@@ -638,4 +641,3 @@ if __name__ == "__main__":
 	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
 	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )
-

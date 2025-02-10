@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from ase.io import read
 
-
 # Retrieves the indices of all atoms of a specified element in the given atomic system.
 # system: The atomic system (a list of atoms or an ASE Atoms object).
 # element: The chemical symbol of the element whose indices are to be found.

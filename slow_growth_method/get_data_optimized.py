@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from ase.io import read
 
+
 # Retrieves the indices of all atoms of a specified element in the given atomic system.
 # system: The atomic system (a list of atoms or an ASE Atoms object).
 # element: The chemical symbol of the element whose indices are to be found.
@@ -45,6 +46,19 @@ def get_RUNs( path_to_simulation ):
 	runs = glob.glob( os.path.join( path_to_simulation, "RUN*" ) )
 	runs.sort( key = lambda x: int( os.path.basename( x ).replace( "RUN", "" ) ) )
 	return runs
+
+# Retrieves the highest frame number from files in the current directory that match the pattern "frame_N.png".
+# Returns: The maximum integer N found in "frame_N.png" filenames, or None if no matches are found.
+def get_max_frame_number():
+	max_n = -1
+	pattern = re.compile(r"frame_(\d+)\.png")
+	for filename in os.listdir():
+		match = pattern.match(filename)
+		if match:
+			frame_num = int(match.group(1))
+			max_n = max(max_n, frame_num)
+
+	return max_n if max_n != -1 else None
 
 # Extracts the "H" index from the first line of an ICONST file.
 # iconst: The path to the ICONST file to process.
@@ -535,7 +549,7 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 	ICONST_indices = list()
 
 	for key, value in database[ val ].items():
-		if value[ "note" ] in [ "Good" ]:  #[ "Good", "Bad" ]:
+		if value[ "note" ] in [ "Bad" ]:  #[ "Good", "Bad" ]:
 			status.append( value[ "note" ] )
 			updated_data, ICONST_idx = process_database_entry( value, filtered_data )
 			filtered_data.update( updated_data )
@@ -597,22 +611,22 @@ if __name__ == "__main__":
 	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
 
 	
-	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
+	#NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
 
-	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
+	#NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
 	
 	
-	NH4_5_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	#NH4_5_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	NH4_5_NO_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#NH4_5_NO_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	NH4_5_splitting = get_barrier_from_db( data, "5_NH4_spliting", verbose = True )
+	#NH4_5_splitting = get_barrier_from_db( data, "5_NH4_spliting", verbose = True )
 
-	NH4_5_shuttling = get_barrier_from_db( data, "5_NH4_shuttling", verbose = True )		
+	#NH4_5_shuttling = get_barrier_from_db( data, "5_NH4_shuttling", verbose = True )		
 	
 
 	#CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )

@@ -62,13 +62,39 @@ def get_RUNs( path_to_simulation ):
 # list1: A list of coordinate points (each element should be an iterable of numerical values).
 # list2: A list of coordinate points with the same structure as list1.
 # Returns: A NumPy array containing the Euclidean distances between corresponding points in list1 and list2.
-def get_distance(list1, list2):
-	arr1 = np.array(list1)
-	arr2 = np.array(list2)
-	squared_differences = (arr1 - arr2) ** 2
-	sum_squared = np.sum(squared_differences, axis=1)
-	distances = np.sqrt(sum_squared)
+def get_distance( list1, list2 ):
+	arr1 = np.array( list1 )
+	arr2 = np.array( list2 )
+	squared_differences = ( arr1 - arr2 ) ** 2
+	sum_squared = np.sum( squared_differences, axis = 1 )
+	distances = np.sqrt( sum_squared )
 	return distances
+
+# Retrieves atomic positions from molecular dynamics (MD) simulation trajectory.
+# path_to_MD_simulation: Path to the directory containing the MD simulation data.
+# atom1: Index or identifier for the first atom of interest.
+# atom2: Index or identifier for the second atom of interest.
+# Returns: Two lists containing the positions of atom1 and atom2 over time.
+def get_MD_atom_positions( path_to_MD_simulation, atom1, atom2 ):
+	step  = 1
+	count = -1
+	start = -1
+	dirs = get_data.get_dirs()
+	system = read( path_to_MD_simulation + '/RUN1/POSCAR' )
+	pos1 = list()
+	pos2 = list()
+	for dir in dirs:
+		with open( dir + '/DATA.js', 'r' ) as f:
+			data = js.load( f )
+		npoints = len( data.keys() )
+		traj = Trajectory( dir + '/MOVIE.traj', 'r' )
+		for i in range( 0, len( traj ) ):
+			count += 1
+			if count > start and count % step == 0:
+				struc = traj[ i ]
+				pos1.append(  list( struc[ atom1 ].position )  )
+				pos2.append(  list( struc[ atom2 ].position )  )
+	return pos1, pos2
 
 # Retrieves the highest frame number from files in the current directory that match the pattern "frame_N.png".
 # Returns: The maximum integer N found in "frame_N.png" filenames, or None if no matches are found.

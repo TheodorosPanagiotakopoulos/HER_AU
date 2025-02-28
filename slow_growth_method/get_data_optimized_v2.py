@@ -10,6 +10,7 @@ import get_mols
 import numpy as np
 import pandas as pd
 from ase.io import read
+from ase.io.trajectory import Trajectory
 
 # Retrieves and returns a sorted list of directories in the current working directory.
 # - Only directories that start with "RUN" are considered.
@@ -70,32 +71,6 @@ def get_distance( list1, list2 ):
 	distances = np.sqrt( sum_squared )
 	return distances
 
-# Retrieves atomic positions from molecular dynamics (MD) simulation trajectory.
-# path_to_MD_simulation: Path to the directory containing the MD simulation data.
-# atom1: Index or identifier for the first atom of interest.
-# atom2: Index or identifier for the second atom of interest.
-# Returns: Two lists containing the positions of atom1 and atom2 over time.
-def get_MD_atom_positions( path_to_MD_simulation, atom1, atom2 ):
-	step  = 1
-	count = -1
-	start = -1
-	dirs = get_data.get_dirs()
-	system = read( path_to_MD_simulation + '/RUN1/POSCAR' )
-	pos1 = list()
-	pos2 = list()
-	for dir in dirs:
-		with open( dir + '/DATA.js', 'r' ) as f:
-			data = js.load( f )
-		npoints = len( data.keys() )
-		traj = Trajectory( dir + '/MOVIE.traj', 'r' )
-		for i in range( 0, len( traj ) ):
-			count += 1
-			if count > start and count % step == 0:
-				struc = traj[ i ]
-				pos1.append(  list( struc[ atom1 ].position )  )
-				pos2.append(  list( struc[ atom2 ].position )  )
-	return pos1, pos2
-
 # Retrieves the highest frame number from files in the current directory that match the pattern "frame_N.png".
 # Returns: The maximum integer N found in "frame_N.png" filenames, or None if no matches are found.
 def get_max_frame_number():
@@ -108,6 +83,32 @@ def get_max_frame_number():
 			max_n = max( max_n, frame_num )
 
 	return max_n if max_n != -1 else None
+
+# Retrieves atomic positions from molecular dynamics (MD) simulation trajectory.
+# path_to_MD_simulation: Path to the directory containing the MD simulation data.
+# atom1: Index or identifier for the first atom of interest.
+# atom2: Index or identifier for the second atom of interest.
+# Returns: Two lists containing the positions of atom1 and atom2 over time.
+def get_MD_atom_positions( path_to_MD_simulation, atom1, atom2 ):
+	step  = 1
+	count = -1
+	start = -1
+	dirs = get_dirs()
+	system = read( path_to_MD_simulation + '/RUN1/POSCAR' )
+	pos1 = list()
+	pos2 = list()
+	for dir in dirs:
+		with open( dir + '/DATA.js', 'r' ) as f:
+			data = json.load( f )
+		npoints = len( data.keys() )
+		traj = Trajectory( dir + '/MOVIE.traj', 'r' )
+		for i in range( 0, len( traj ) ):
+			count += 1
+			if count > start and count % step == 0:
+				struc = traj[ i ]
+				pos1.append(  list( struc[ atom1 ].position )  )
+				pos2.append(  list( struc[ atom2 ].position )  )
+	return pos1, pos2
 
 # Renames specific frame files in the current directory based on given rules.
 # - "frame_0.png" is copied and renamed to "IS_<aux_name>.png".

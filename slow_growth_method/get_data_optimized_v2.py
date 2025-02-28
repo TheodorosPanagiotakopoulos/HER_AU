@@ -158,7 +158,6 @@ def get_H_from_ICONST( iconst, verbose = False ):
 		print( "H index: ", H_idx )
 	return int( H_idx ) - 1
 
-
 ################################# FROM ICONST #################################
 
 # Parses an ICONST file to extract atomic indices based on the number of lines in the file.

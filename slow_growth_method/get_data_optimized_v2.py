@@ -58,6 +58,18 @@ def get_RUNs( path_to_simulation ):
 	runs.sort( key = lambda x: int( os.path.basename( x ).replace( "RUN", "" ) ) )
 	return runs
 
+# Computes the Euclidean distance between corresponding points in two lists.
+# list1: A list of coordinate points (each element should be an iterable of numerical values).
+# list2: A list of coordinate points with the same structure as list1.
+# Returns: A NumPy array containing the Euclidean distances between corresponding points in list1 and list2.
+def get_distance(list1, list2):
+	arr1 = np.array(list1)
+	arr2 = np.array(list2)
+	squared_differences = (arr1 - arr2) ** 2
+	sum_squared = np.sum(squared_differences, axis=1)
+	distances = np.sqrt(sum_squared)
+	return distances
+
 # Retrieves the highest frame number from files in the current directory that match the pattern "frame_N.png".
 # Returns: The maximum integer N found in "frame_N.png" filenames, or None if no matches are found.
 def get_max_frame_number():

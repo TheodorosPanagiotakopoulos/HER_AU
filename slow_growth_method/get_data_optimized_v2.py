@@ -1,14 +1,25 @@
 import os
+import re
 import sys
 import gzip
 import glob
 import json
+import shutil
 import getpass
 import get_mols
 import numpy as np
 import pandas as pd
 from ase.io import read
 
+# Retrieves and returns a sorted list of directories in the current working directory.
+# - Only directories that start with "RUN" are considered.
+# - Sorting is done numerically based on the number following "RUN".
+# - If a directory name does not have a valid number after "RUN", it is placed at the end.
+# Returns:
+# - A list of directory names sorted in ascending order based on the numerical value after "RUN".
+def get_dirs():
+	path = os.getcwd()
+	return sorted( [name for name in os.listdir( path ) if os.path.isdir( os.path.join( path, name ) ) and name.startswith( "RUN" ) ], key=lambda x: int(x[ 3: ] ) if x[ 3: ].isdigit() else float( "inf" ) )
 
 # Retrieves the indices of all atoms of a specified element in the given atomic system.
 # system: The atomic system (a list of atoms or an ASE Atoms object).
@@ -61,12 +72,14 @@ def get_max_frame_number():
 	return max_n if max_n != -1 else None
 
 # Renames specific frame files in the current directory based on given rules.
-# - "frame_0.png" is renamed to "IS.png".
-# - "frame_N.png" (where N is the highest number) is renamed to "FS.png".
-# - "frame_num.png" (where num is the closest to the given integer) is renamed to "TS.png".
+# - "frame_0.png" is copied and renamed to "IS_<aux_name>.png".
+# - "frame_FS.png" (where FS is a given integer) is copied and renamed to "FS_<aux_name>.png".
+# - "frame_num.png" (where num is the closest to the given integer) is copied and renamed to "TS_<aux_name>.png".
 # Parameters:
-# - num: An integer used to determine which frame file is closest and should be renamed to "TS.png".
-def rename_frames( num ):
+# - num: An integer used to determine which frame file is closest and should be renamed to "TS_<aux_name>.png".
+# - FS: An integer representing the specific frame number that should be renamed to "FS_<aux_name>.png".
+# - aux_name: A string appended to the renamed files for distinction.
+def rename_frames( num, FS, aux_name ):
 	max_n = -1
 	closest_n = None
 	closest_diff = float( "inf" )
@@ -84,13 +97,13 @@ def rename_frames( num ):
 			if diff < closest_diff:
 				closest_diff = diff
 				closest_n = frame_num
-	if 0 in frames:
-		shutil.copy( "frame_0.png", "IS.png" )
-	if max_n in frames:
-		shutil.copy( f"frame_{max_n}.png", "FS.png" )
-	if closest_n is not None and closest_n in frames:
-		shutil.copy( f"frame_{closest_n}.png", "TS.png" )
 
+	if 0 in frames:
+		shutil.copy( "frame_0.png", f"IS_{aux_name}.png" )
+	if FS in frames:
+		shutil.copy(f"frame_{FS}.png", f"FS_{aux_name}.png")
+	if closest_n is not None and closest_n in frames:
+		shutil.copy(f"frame_{closest_n}.png", f"TS_{aux_name}.png")
 
 # Extracts the "H" index from the first line of an ICONST file.
 # iconst: The path to the ICONST file to process.
@@ -112,13 +125,12 @@ def get_H_from_ICONST( iconst, verbose = False ):
 # Parses an ICONST file to extract atomic indices based on the number of lines in the file.
 # iconst: Path to the ICONST file.
 # verbose: If True, prints detailed index information. Defaults to False.
-# Returns: 
+# Returns:
 # - If the ICONST file has 2 lines, returns a tuple (H_idx, O_idx) with zero-based indices.
 # - If the ICONST file has 3 lines, returns a tuple (O_H2O_idx, H_H2O_idx, H_cation_idx) with zero-based indices.
 # Raises: ValueError if the ICONST file contains less than 2 lines or more than 3 lines.
 def get_data_ICONST( path_to_SG_simulation, verbose = False ):
-	runs = get_RUNs( path_to_SG_simulation )
-	iconst_path = os.path.join( path_to_SG_simulation, runs[ - 1 ].split( "/" )[ -1 ], "ICONST" )
+	iconst_path = os.path.join( path_to_SG_simulation, "RUN1/ICONST" )
 	with open( iconst_path ) as file:
 		lines = [ line.rstrip() for line in file ]
 
@@ -128,8 +140,8 @@ def get_data_ICONST( path_to_SG_simulation, verbose = False ):
 		raise ValueError( "ICONST file must NOT contain more than three lines." )
 
 	first_line = lines[ 0 ].split()
-	O_idx = int( first_line[ 1 ] ) - 1  
-	H_idx = int( first_line[ 2 ] ) - 1  
+	O_idx = int( first_line[ 1 ] ) - 1
+	H_idx = int( first_line[ 2 ] ) - 1
 
 	if verbose:
 		print( "ICONST H index:", H_idx + 1 )
@@ -156,10 +168,15 @@ def get_data_ICONST( path_to_SG_simulation, verbose = False ):
 # iconst_data: A list containing either 2 or 3 indices representing atomic relationships.
 # Returns: A tuple containing (H_idx, O_idx, H_cation_idx). If only two indices are provided, H_cation_idx is set to NaN.
 # Raises: ValueError if the input does not contain exactly 2 or 3 elements.
-def get_standarized_ICONST_data( iconst_data ):
-	if len( iconst_data ) == 2:
+def get_standarized_ICONST_data( path_to_SG_simulation ):
+	iconst_data = get_data_ICONST( path_to_SG_simulation )
+	cations = [ "NH4", "CH3NH3" ]
+	if len( iconst_data ) == 2 and any( cation + "_splitting" not in path_to_SG_simulation for cation in cations ):
 		H_idx, O_idx = iconst_data
 		return H_idx, O_idx, np.nan
+	elif len( iconst_data ) == 2 and any(cation + "_splitting" in path_to_SG_simulation for cation in cations):
+		N_idx, H_idx = iconst_data
+		return H_idx, N_idx, np.nan
 	elif len( iconst_data ) == 3:
 		O_idx, H_idx, H_cation_idx = iconst_data
 		return H_idx, O_idx, H_cation_idx
@@ -173,16 +190,14 @@ def get_standarized_ICONST_data( iconst_data ):
 # If no valid H_cation_idx is found, returns NaN.
 def get_initial_H_N_distance( path_to_SG_simulation, verbose = False ):
 	system = get_initial_system( path_to_SG_simulation )
-	iconst_data = get_data_ICONST( path_to_SG_simulation )
-	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( iconst_data )
+	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( path_to_SG_simulation )
 	if not np.isnan( H_cation_idx ):
 		distance = round( np.linalg.norm( system.positions[ O_idx ] - system.positions[ H_cation_idx ] ), 2 )
 	else:
 		distance = np.nan
 	if verbose:
 		print( distance )
-	return distance 
-			
+	return distance
 
 # Calculates the minimum initial distance between the "H" atom and any "Au" atom in the system.
 # path_to_SG_calculation: The path to the SG calculation directory.
@@ -192,8 +207,7 @@ def get_initial_H_Au_distance( path_to_SG_simulation, verbose = False ):
 	distance_H_to_Au = list()
 	os.chdir( path_to_SG_simulation )
 	runs = get_RUNs( path_to_SG_simulation )
-	data_ICONST = get_data_ICONST( path_to_SG_simulation )
-	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( data_ICONST )
+	H_idx, O_idx, H_cation_idx = get_standarized_ICONST_data( path_to_SG_simulation )
 
 	if not runs:
 		system = read( "POSCAR" )
@@ -235,7 +249,7 @@ def get_min_distance( reference_position, positions ):
 # path_to_SG_simulation: Path to SG simulation.
 # cation_type: "Na", "N-NH4", or "N-CH3NH3".
 # verbose: Prints debug info if True.
-# Returns: (O–cation distance, O–H distance, H-bond info).
+# Returns: (O?cation distance, O?H distance, H-bond info).
 def get_distances( path_to_SG_simulation, cation_type, verbose = False ):
 	system = get_initial_system( path_to_SG_simulation )
 
@@ -311,12 +325,12 @@ def get_cc_bm():
 		print( "REPORT found" )
 		with open( files[ 0 ], "rb" ) as file:
 			lines = file.readlines()
-		cc = [ line.decode( "utf-8", errors = "ignore" ).strip() for line in lines if b"cc" in line ]	
+		cc = [ line.decode( "utf-8", errors = "ignore" ).strip() for line in lines if b"cc" in line ]
 		b_m = [ line.decode( "utf-8", errors = "ignore" ).strip() for line in lines if b"b_m" in line ]
 	elif "REPORT.gz" in files:
 		with gzip.open( files[ 0 ], "rb" ) as file:
 			lines = file.readlines()
-		cc = [ line.decode( "utf-8", errors = "ignore" ).strip() for line in lines if b"cc" in line ]	
+		cc = [ line.decode( "utf-8", errors = "ignore" ).strip() for line in lines if b"cc" in line ]
 		b_m = [ line.decode( "utf-8", errors = "ignore" ).strip() for line in lines if b"b_m" in line ]
 	else:
 		print( "REPORT NOT found" )
@@ -347,10 +361,6 @@ def collect_cc_and_bm( path_to_SG_calculation ):
 				cc, b_m = get_cc_bm()
 				CC.append( cc )
 				B_M.append( b_m )
-			#os.chdir( path_to_SG_calculation )
-			#cc, b_m = get_cc_bm()
-			#CC.append( cc )
-			#B_M.append( b_m )
 			return [ float( i ) for i in flatten_matrix( CC ) ], [ float( i ) for i in flatten_matrix( B_M ) ]
 	else:
 		print( "Path not found" )
@@ -497,7 +507,7 @@ def create_dataframe( filtered_data, status, aux_key ):
 		elif key.startswith( "Dist(O-cation)_" ):
 			distances_O_cation.append( filtered_data[ key ] )
 		elif key.startswith( "Dist(O-H)" ):
-			distances_O_H.append( filtered_data[ key ] ) 
+			distances_O_H.append( filtered_data[ key ] )
 		elif key.startswith( "Initial_Dist(O-H)_" ):
 			initial_distances_H_O.append( filtered_data[ key ] )
 		elif key.startswith( "Bond_data_" ):
@@ -516,18 +526,16 @@ def create_dataframe( filtered_data, status, aux_key ):
 		data[ "Min_D(O-H)" ] = distances_O_H
 	data[ "I(O-H)" ] = bond_data
 	data[ "status" ] = status
-	
 
 	pd.set_option( "display.colheader_justify", "left" )
 	data.style.set_properties( **{ "text-align": "center" } )
-	#data = data.sort_values( by = "barrier" ).reset_index( drop = True )
 
 	return data
 
-#The function will add a suggestion only if the hydrogen (H) of the nitrogen (N) group in the cation, 
-#which is closer to the oxygen (O) of the H2O molecule that will dissociate, is different from the hydrogen (H) of the nitrogen (N) group 
+#The function will add a suggestion only if the hydrogen (H) of the nitrogen (N) group in the cation,
+#which is closer to the oxygen (O) of the H2O molecule that will dissociate, is different from the hydrogen (H) of the nitrogen (N) group
 #in the cation listed in the ICONST file. In other words, it will suggest performing a simulation using the hydrogen (H) of the nitrogen (N)
-#group in the cation that is closer to the H₂O molecule that will dissociate.
+#group in the cation that is closer to the H?O molecule that will dissociate.
 # Adds suggestions based on a comparison between "I(O-H)" and "ICONST".
 # sorted_data: A pandas DataFrame containing sorted data with "I(O-H)" and "ICONST".
 # Returns: The updated DataFrame with a new "suggest" column containing suggestions or NaN values.
@@ -576,13 +584,13 @@ def get_sorted_data_cleaned( dataframe ):
 # fixed_length: The length to which the "CONF" column entries should be padded/truncated. Default is 45.
 # verbose: If True, prints the DataFrame. Default is False.
 # Returns: A sorted pandas DataFrame containing processed data, or None if no valid data is found.
-def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
+def get_barrier_from_db( database, val, fixed_length = 43, verbose = False ):
 	filtered_data = {}
 	status = list()
 	ICONST_indices = list()
 
 	for key, value in database[ val ].items():
-		if value[ "note" ] in [ "Good", "Bad" ]:  #[ "Good", "Bad" ]:
+		if value[ "note" ] in [ "Good" ]:  #[ "Good", "Bad" ]:
 			status.append( value[ "note" ] )
 			updated_data, ICONST_idx = process_database_entry( value, filtered_data )
 			filtered_data.update( updated_data )
@@ -597,18 +605,15 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 	sorted_data = create_dataframe( filtered_data, status, aux_key )
 	sorted_data[ "CONF" ] = sorted_data[ "CONF" ].apply( lambda x: x[ :fixed_length ].ljust( fixed_length ) )
 	sorted_data[ "ICONST" ] = ICONST_indices
-	
+
 	sorted_data = add_suggestions( sorted_data )
 	sorted_data = sorted_data.sort_values( by = "barrier" ).reset_index( drop = True )
-	
-	#cols = [ col for col in sorted_data.columns if col != "RUNS" ] + [ "RUNS" ]	
-	#cols = [ col for col in sorted_data.columns if col != "status" ] + [ "status" ]
+
 	cols = [ col for col in sorted_data.columns if col not in [ "RUNS", "status"] ] + [ "RUNS", "status" ]
 
 
-	
 	sorted_data = sorted_data.reindex( columns = cols )
-	
+
 	sorted_data = get_sorted_data_cleaned( sorted_data )
 
 	if verbose:
@@ -618,49 +623,45 @@ def get_barrier_from_db( database, val, fixed_length = 43, verbose = False):
 
 if __name__ == "__main__":
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/database/"
-	data = load_database( path + "database_for_theo.js" )	
-	
+	data = load_database( path + "database_for_theo.js" )
+
 	#Na_1_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )	
+	#Na_1_No_hyd = get_barrier_from_db( data, "1_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
+	Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#Na_3_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_from_hydration_shell", verbose = True )
+	Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#Na_3_No_hyd = get_barrier_from_db( data, "3_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
-
-	
 	#Na_5_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_from_hydration_shell", verbose = True )
-	
+
 	#Na_5_No_hyd = get_barrier_from_db( data, "5_Na_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
-	
 
-	NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
-	
-	NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
-	
-	NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
-	NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
+	#NH4_1_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	
-	#NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+	#NH4_1_NO_hyd = get_barrier_from_db( data, "1_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	#NH4_1_splitting = get_barrier_from_db( data, "1_NH4_spliting", verbose = True )
 
-	#NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
+	#NH4_1_shuttling = get_barrier_from_db( data, "1_NH4_shuttling", verbose = True )
 
-	#NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
-	
-	
+	NH4_3_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
+
+	NH4_3_NO_hyd = get_barrier_from_db( data, "3_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+
+	NH4_3_splitting = get_barrier_from_db( data, "3_NH4_spliting", verbose = True )
+
+	NH4_3_shuttling = get_barrier_from_db( data, "3_NH4_shuttling", verbose = True )
+
 	#NH4_5_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_from_hydration_shell", verbose = True )
 
 	#NH4_5_NO_hyd = get_barrier_from_db( data, "5_NH4_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
 	#NH4_5_splitting = get_barrier_from_db( data, "5_NH4_spliting", verbose = True )
 
-	#NH4_5_shuttling = get_barrier_from_db( data, "5_NH4_shuttling", verbose = True )		
-	
+	#NH4_5_shuttling = get_barrier_from_db( data, "5_NH4_shuttling", verbose = True )
+
 
 	#CH3NH3_1_hyd = get_barrier_from_db( data, "1_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 
@@ -669,21 +670,19 @@ if __name__ == "__main__":
 	#CH3NH3_1_splitting = get_barrier_from_db( data, "1_CH3NH3_spliting", verbose = True )
 
 	#CH3NH3_1_shuttling = get_barrier_from_db( data, "1_CH3NH3_shuttling", verbose = True )
-	
-	
-	#CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#CH3NH3_3_NO_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
+	CH3NH3_3_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
 
-	#CH3NH3_3_splitting = get_barrier_from_db( data, "3_CH3NH3_spliting", verbose = True )
+	CH3NH3_3_NO_hyd = get_barrier_from_db( data, "3_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
 
-	#CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", verbose = True )
-	
-	
+	CH3NH3_3_splitting = get_barrier_from_db( data, "3_CH3NH3_spliting", verbose = True )
+
+	CH3NH3_3_shuttling = get_barrier_from_db( data, "3_CH3NH3_shuttling", verbose = True )
+
 	#CH3NH3_5_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_from_hydration_shell", verbose = True )
-	
+
 	#CH3NH3_5_NO_hyd = get_barrier_from_db( data, "5_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", verbose = True )
-	
+
 	#CH3NH3_5_splitting = get_barrier_from_db( data, "5_CH3NH3_spliting", verbose = True )
 
 	#CH3NH3_5_shuttling = get_barrier_from_db( data, "5_CH3NH3_shuttling", verbose = True )

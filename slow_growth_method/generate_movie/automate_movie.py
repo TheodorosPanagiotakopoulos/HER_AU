@@ -34,7 +34,16 @@ def change_pattern( file = "movie.py", pattern='output = "', change_to="" ):
 				line = re.sub( r'output = ".*?"', 'output = "' + change_to + '"', line )
 			file.write( line )
 
-
+# Updates movie output filenames and manages simulation directories.
+# path_to_cations_dir: The path to the cations directory containing simulation data.
+# The function:
+# - Extracts a prefix from the directory path.
+# - Identifies relevant subdirectories matching the prefix.
+# - Removes outdated output files from each directory.
+# - Checks for existing frame PNG files and updates the output filename pattern accordingly.
+# - Executes the simulation script.
+# - Copies the generated MP4 files to a designated location.
+# Returns: None. The function modifies files and directories in place.
 def change_movie_output( path_to_cations_dir ):
 	prefix = path_to_cations_dir.split( "/" )[ -2 ]
 	print( "prefix = ", prefix )
@@ -62,7 +71,13 @@ def change_movie_output( path_to_cations_dir ):
 		new_path = os.path.join( path_to_cations_dir, i )
 		os.chdir( new_path )
 		os.system( "cp *.mp4 /home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/NH4/movies_NH4" )
-		
+
+# Generates movies by updating and processing simulation output files.
+# path_to_cations_dir: The path to the directory containing cation simulation data.
+# The function:
+# - Calls change_movie_output to update filenames and manage simulation outputs.
+# - Ensures the necessary modifications are applied before generating the movie files.
+# Returns: None. The function modifies files and directories in place.
 def generate_movie( path_to_cations_dir ):
 	change_movie_output( path_to_cations_dir )
 

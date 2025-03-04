@@ -10,6 +10,11 @@ import subprocess
 def any_frame_png_exists( path_to_SG_simulation ):
 	return bool( glob.glob( os.path.join( path_to_SG_simulation , "frame*.png" ) ) )
 
+# Modifies a specific pattern in a given file by replacing its assigned value.
+# file: The name or path of the file to be modified. Default is "movie.py".
+# pattern: The pattern to search for in the file. Default is 'output = "'.
+# change_to: The new value to replace the existing one within the pattern. Default is an empty string.
+# Returns: None. The function directly modifies the file in place.
 def change_pattern( file = "movie.py", pattern='output = "', change_to="" ):
 	file_path = file
 	with open( file_path, "r" ) as file:

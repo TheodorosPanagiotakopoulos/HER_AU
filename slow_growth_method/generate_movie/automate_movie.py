@@ -4,11 +4,19 @@ import sys
 import glob
 import subprocess
 
+
 # Checks if any PNG files matching the pattern "frame*.png" exist in the given simulation directory.
 # path_to_SG_simulation: The path to the directory where the simulation frames are stored.
 # Returns: True if at least one matching PNG file is found, otherwise False.
 def any_frame_png_exists( path_to_SG_simulation ):
 	return bool( glob.glob( os.path.join( path_to_SG_simulation , "frame*.png" ) ) )
+
+# Retrieves a list of directories in the current working directory that start with a given prefix.
+# prefix: A string that the directory names should start with. Default is an empty string, which matches all directories.
+# Returns: A list of directory names matching the specified prefix.
+def get_dirs( prefix = "" ):
+    path = os.getcwd()
+    return [ i for i in os.listdir( path ) if i.startswith( prefix ) ]
 
 # Modifies a specific pattern in a given file by replacing its assigned value.
 # file: The name or path of the file to be modified. Default is "movie.py".
@@ -26,10 +34,7 @@ def change_pattern( file = "movie.py", pattern='output = "', change_to="" ):
 				line = re.sub( r'output = ".*?"', 'output = "' + change_to + '"', line )
 			file.write( line )
 
-def get_dirs( prefix = "" ):
-	path = os.getcwd()
-	return [ i for i in os.listdir( path ) if i.startswith( prefix ) ]
-		
+
 def change_movie_output( path_to_cations_dir ):
 	prefix = path_to_cations_dir.split( "/" )[ -2 ]
 	print( "prefix = ", prefix )

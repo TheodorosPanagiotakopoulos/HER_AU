@@ -4,6 +4,9 @@ import sys
 import glob
 import subprocess
 
+# Checks if any PNG files matching the pattern "frame*.png" exist in the given simulation directory.
+# path_to_SG_simulation: The path to the directory where the simulation frames are stored.
+# Returns: True if at least one matching PNG file is found, otherwise False.
 def any_frame_png_exists( path_to_SG_simulation ):
 	return bool( glob.glob( os.path.join( path_to_SG_simulation , "frame*.png" ) ) )
 

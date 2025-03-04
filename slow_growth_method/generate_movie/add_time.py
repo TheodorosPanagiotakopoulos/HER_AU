@@ -27,10 +27,10 @@ def add_time_stamp( image_name, outdir = 'outdir' ):
     plt.subplots_adjust(left=0.0, right=1., top=1, bottom=0.0, wspace=0.00, hspace= 0.00)
     if not os.path.isdir( outdir ):
         os.mkdir( outdir )
-    plt.savefig( outdir + '/t' + image_name, dpi = 150 )
+    plt.savefig( outdir + '/t' + image_name, dpi = 200 )
     plt.clf()
     plt.close()
 frames = [ x for x in os.listdir( '.' ) if '.png' in x and 'frame' in x ]
 for image_name in tqdm( frames ):
     if ( not os.path.isfile( 'outdir/t' + image_name)):
-        add_time_stamp( image_name ) 
+        add_time_stamp( image_name )

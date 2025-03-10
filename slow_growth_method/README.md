@@ -21,27 +21,3 @@ The tppy Library is designed to facilitate material science simulations related 
 1. Clone the repository:
    ```bash
    git clone https://github.com/theodorosP/HER_AU.git
-   ```
-2. Navigate to the subfolder:
-   ```bash
-   cd HER_AU/slow_growth_method
-   ```
-3. Install the required dependencies using pip:
-   ```bash
-   pip install numpy ase
-   ```
-4. Ensure the path to the `slow_growth_method` folder is added to your Python environment.
-
-## Usage Notes
-- Before using the library, ensure that all VASP output files (e.g., `CONTCAR`, `CHGCAR`, `OUTCAR`) are located in the correct working directory.
-- The library is compatible with both VASP and ASE-based workflows.
-
-## License
-This library is part of the Hydrogen Evolution Reaction project. Refer to the repository for specific licensing information.
-
-## Contributions
-Contributions and feedback are welcome. For issues or feature requests, please open a GitHub issue in the repository.
-
-## Contact
-For questions or collaboration inquiries, please reach out at [teosfp@hotmail.com].
-

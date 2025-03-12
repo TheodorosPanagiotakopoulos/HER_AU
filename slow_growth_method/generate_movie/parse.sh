@@ -1,7 +1,7 @@
 #!/bin/bash
 
 for i in */; do
-    cd "$i" || continue
+    cd "$i"
 
     if [[ -f "OUTCAR.gz" && ! -f "OUTCAR" ]]; then
         path=$(pwd)

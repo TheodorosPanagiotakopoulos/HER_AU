@@ -1,10 +1,9 @@
 import string
 
 def is_printable(line):
-    """Check if a line is mostly printable and not empty."""
-    if not line.strip():  # Allow empty lines (don't remove them)
-        return True  
-    threshold = 0.8  # At least 80% of characters should be printable
+    if not line.strip():
+        return True
+    threshold = 0.8
     printable_chars = set(string.printable)
     num_printable = sum(1 for char in line if char in printable_chars)
     return (num_printable / max(len(line), 1)) >= threshold  # Avoid division by zero

@@ -37,11 +37,9 @@ This script processes the simulation data from the RUNX folders.
 
 In that case:
 
-    First, copy fix.py into every run folder (RUN1, RUN2, ..., RUNN).
+- First, copy fix.py into every run folder (RUN1, RUN2, ..., RUNN).
 
-    Then, navigate to the main directory (where all the RUN folders and parse.sh are located), and run:
-
-    bash parse.sh
+- Then, navigate to the main directory (where all the RUN folders and parse.sh are located), and run: bash parse.sh
 
 This will execute `parse_CH3NH3.py` inside each RUN folder automatically.
 

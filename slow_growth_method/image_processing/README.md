@@ -1,7 +1,3 @@
-Sure! Here's your fully cleaned and styled `README.md` text, written exactly in the style you requested — all in one block for easy copy-pasting:
-
----
-
 # Slow Growth Method Simulations
 
 This repository contains scripts to parse and generate images from slow growth method simulations.

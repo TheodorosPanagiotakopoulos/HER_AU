@@ -28,7 +28,7 @@ Instructions
 
 Navigate to the slow_growth_method directory and execute:
 
-python parse.py
+    python parse.py
 
 This script processes the simulation data from the RUNX folders.
 
@@ -47,7 +47,7 @@ This will execute parse_CH3NH3.py inside each RUN folder automatically.
 
 In the slow_growth_method directory, run:
 
-python generate_image.py
+    python generate_image.py
 
 Make sure get_data.py and get_mols.py are present in the same directory, as they are required for generating images.
 3. Add Time and Process Movie
@@ -57,7 +57,7 @@ Ensure that add_time.py and movie.py are present in the slow_growth_method direc
 
 Move one folder back, to the main directory where all the slow growth method simulations (RUN1, RUN2, ...) are stored. Then, execute:
 
-python automate_movie.py
+    python automate_movie.py
 
 This script automates the movie creation process. It requires run.sh in the same directory to function properly.
 5. Modify the Output Path
@@ -67,7 +67,7 @@ Requirements
 
 Ensure you have the necessary dependencies installed. If needed, install them using:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 This setup ensures a smooth workflow from parsing simulation data to generating a final movie.
 

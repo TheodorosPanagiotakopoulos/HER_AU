@@ -1,3 +1,7 @@
+Sure! Here's your fully cleaned and styled `README.md` text, written exactly in the style you requested — all in one block for easy copy-pasting:
+
+---
+
 # Slow Growth Method Simulations
 
 This repository contains scripts to parse and generate images from slow growth method simulations.
@@ -25,11 +29,11 @@ root_directory/
 
 Navigate to the `slow_growth_method` directory and run:
 
-python parse.py
+    python parse.py
 
 This script processes the simulation data from the RUNX folders.
 
-Note: If the cation is CH3NH3, use parse_CH3NH3.py instead of parse.py.
+**Note:** If the cation is CH3NH3, use `parse_CH3NH3.py` instead of `parse.py`.
 
 In that case:
 
@@ -37,18 +41,24 @@ In that case:
 
     Then, navigate to the main directory (where all the RUN folders and parse.sh are located), and run:
 
-This will execute parse_CH3NH3.py inside each RUN folder automatically.
-###2. Generate Images
+    bash parse.sh
 
-In the slow_growth_method directory, run:
+This will execute `parse_CH3NH3.py` inside each RUN folder automatically.
 
-python generate_image.py
+### 2. Generate Images
 
-Make sure that get_data.py and get_mols.py are also present in the same directory, as they are required for generating images.
-Requirements
+In the `slow_growth_method` directory, run:
+
+    python generate_image.py
+
+Make sure that `get_data.py` and `get_mols.py` are also present in the same directory, as they are required for generating images.
+
+## Requirements
 
 Ensure you have the necessary dependencies installed. You can install them using:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 This setup ensures a smooth workflow from parsing simulation data to generating the final images or movie. Happy simulating! 🚀
+
+thodoris@thodoris:~/Downloads/HER_AU/slow_growth_method/image_processing$

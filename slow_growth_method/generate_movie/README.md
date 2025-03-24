@@ -69,6 +69,3 @@ Ensure you have the necessary dependencies installed. If needed, install them us
 
     pip install -r requirements.txt
 
-This setup ensures a smooth workflow from parsing simulation data to generating a final movie.
-
-Happy simulating! 🚀

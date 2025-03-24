@@ -57,6 +57,4 @@ Ensure you have the necessary dependencies installed. You can install them using
 
     pip install -r requirements.txt
 
-This setup ensures a smooth workflow from parsing simulation data to generating the final images or movie. Happy simulating! 🚀
-
-thodoris@thodoris:~/Downloads/HER_AU/slow_growth_method/image_processing$
+Happy simulating! 🚀

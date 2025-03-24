@@ -1,6 +1,6 @@
 # Slow Growth Method for Modeling Activation Barriers Using the Trapezoidal Rule
 
-This repository provides a computational implementation of the **slow-growth method** for modeling the activation barriers of chemical reactions. The method employs the **trapezoidal rule** to numerically integrate along the reaction coordinate, offering an efficient approach to compute free energy changes.
+- This repository provides a computational implementation of the **slow-growth method** for modeling the activation barriers of chemical reactions. The method employs the **trapezoidal rule** to numerically integrate along the reaction coordinate, offering an efficient approach to compute free energy changes.
 ---
 
 ## Table of Contents

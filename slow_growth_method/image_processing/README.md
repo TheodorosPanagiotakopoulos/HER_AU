@@ -25,7 +25,6 @@ root_directory/
 
 Navigate to the `slow_growth_method` directory and run:
 
-```bash
 python parse.py
 
 This script processes the simulation data from the RUNX folders.
@@ -39,7 +38,7 @@ In that case:
     Then, navigate to the main directory (where all the RUN folders and parse.sh are located), and run:
 
 This will execute parse_CH3NH3.py inside each RUN folder automatically.
-2. Generate Images
+###2. Generate Images
 
 In the slow_growth_method directory, run:
 

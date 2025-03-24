@@ -36,9 +36,9 @@ Note: If the cation is CH3NH3, you must use parse_CH3NH3.py instead of parse.py.
 
 In that case:
 
-    First, copy fix.py into every run folder (RUN1, RUN2, ..., RUNN).
+- First, copy fix.py into every run folder (RUN1, RUN2, ..., RUNN).
 
-    Then, go to the main directory (where you see all the RUN folders and parse.sh) and run:
+- Then, go to the main directory (where you see all the RUN folders and parse.sh) and run:
 
 bash parse.sh
 

@@ -87,4 +87,3 @@ if __name__ == "__main__":
 	#print( len( cc ) )
 	#for i in cc:
 	#	print( i )
-	#cc, b_m = get_cc_bm( path )

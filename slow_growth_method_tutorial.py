@@ -88,5 +88,3 @@ if __name__ == "__main__":
 	#for i in cc:
 	#	print( i )
 	#cc, b_m = get_cc_bm( path )
-	#for i in b_m:
-	#	print( i )

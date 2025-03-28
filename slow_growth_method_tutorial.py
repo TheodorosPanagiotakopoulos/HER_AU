@@ -83,5 +83,3 @@ if __name__ == "__main__":
 	#a, b = parse_report( "REPORT" )
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/tutorial_1/"
 	get_free_energy( path )
-	#cc, b_m = collect_cc_and_bm( path )
-	#print( len( cc ) )

@@ -85,5 +85,3 @@ if __name__ == "__main__":
 	get_free_energy( path )
 	#cc, b_m = collect_cc_and_bm( path )
 	#print( len( cc ) )
-	#for i in cc:
-	#	print( i )

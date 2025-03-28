@@ -80,6 +80,5 @@ def get_free_energy( path_to_SG_calculation ):
 	print( start, end )
 
 if __name__ == "__main__":
-	#a, b = parse_report( "REPORT" )
 	path = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/slow_grow_method/tutorial_1/"
 	get_free_energy( path )

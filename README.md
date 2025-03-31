@@ -16,7 +16,7 @@ This repository provides a computational implementation of the **slow-growth met
 ---
 
 ## Introduction
-Chemical reactions often proceed through a transition state, requiring additional energy to overcome an **activation barrier**. The **slow-growth method** offers a systematic way to compute free energy changes by gradually perturbing the system along the reaction coordinate. By combining this approach with the **trapezoidal rule**, we can achieve accurate numerical integration over discrete points.
+Chemical reactions often proceed through a transition state, requiring additional energy to overcome an **activation barrier**. The **slow-growth method** offers a systematic way to compute free energy changes by gradually perturbing the system along the reaction coordinate. By combining this approach with the **trapezoidal rule**, we can achieve accurate numerical integration over discrete points
 
 ---
 

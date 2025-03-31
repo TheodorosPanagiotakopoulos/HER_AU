@@ -66,4 +66,4 @@ Where:
 Clone the repository:
 ```bash
 git clone https://github.com/theodorosP/HER_AU.git
-cd HER_AU
+cd HER_A

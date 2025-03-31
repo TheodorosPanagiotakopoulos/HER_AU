@@ -3,7 +3,6 @@ import os
 import getpass
 import get_mols
 
-
 username=getpass.getuser()
 
 keywords = [ 'path', 'note' ]
@@ -97,7 +96,10 @@ if __name__ == "__main__":
 
 	Na_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/Na"
 	add_to_database_v2( Na_MD, "Na_MD" )
-
+	
+	K_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/K"
+	add_to_database_v2( K_MD, "K_MD" )
+	
 	NH4_MD = "/home/theodoros/PROJ_ElectroCat/theodoros/HER/Au/HER_Au/MD/NH4"
 	add_to_database_v2( NH4_MD, "NH4_MD" )
 

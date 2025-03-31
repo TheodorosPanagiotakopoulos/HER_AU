@@ -11,7 +11,7 @@ This repository provides a computational implementation of the **slow-growth met
 4. [Methodology](#methodology)
     - [Slow Growth Method](#slow-growth-method)
     - [Trapezoidal Rule](#trapezoidal-rule)
-5. [Installation](#installation)
+5. [Installation](#installation).
 
 ---
 

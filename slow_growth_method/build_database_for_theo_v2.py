@@ -139,7 +139,7 @@ if __name__ == "__main__":
 	CH3NH3_key_HashMap = { "A" : "_CH3NH3_H2O_dissociation_from_hydration_shell", "B" : "_CH3NH3_H2O_dissociation_NOT_from_hydration_shell", "C" :"_CH3NH3_spliting", "D" : "_CH3NH3_shuttling" }
 	CH3NH3_name = "_CH3NH3_40_H2O_v"
 	for i in [ 1, 3, 5 ]:
-		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "A" ], str( i ) + CH3NH3_key_HashMap[ "A" ],  str( i ) + CH3NH3_name )
+		#add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "A" ], str( i ) + CH3NH3_key_HashMap[ "A" ],  str( i ) + CH3NH3_name )
 		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "B" ], str( i ) + CH3NH3_key_HashMap[ "B" ],  str( i ) + CH3NH3_name )
 		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "C" ], str( i ) + CH3NH3_key_HashMap[ "C" ],  str( i ) + CH3NH3_name )
 		add_to_database( base_CH3NH3 + str( i ) + "_CH3NH3" + CH3NH3_HashMap[ "D" ], str( i ) + CH3NH3_key_HashMap[ "D" ],  str( i ) + CH3NH3_name )

@@ -72,7 +72,7 @@ def get_free_energy( path_to_SG_calculation ):
 	if len( sys.argv ) > 1:
 		start = int( sys.argv[ 1 ] )
 	else:
-		start = 0  
+		start = 0
 	if len( sys.argv ) > 2:
 		end = int( sys.argv[ 2 ] ) 
 	else:

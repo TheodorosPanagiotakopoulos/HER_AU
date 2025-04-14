@@ -31,7 +31,6 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 	for h2o in H2O_mols:
 		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]
-
 		H_positions = [system.positions[h1_idx], system.positions[h2_idx]]
 		distances_to_Au = cdist(H_positions, au_positions)
 		min_dist_idx = np.argmin(distances_to_Au)

@@ -28,7 +28,6 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[au_indices]
 	results = list()
-
 	for h2o in H2O_mols:
 		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]

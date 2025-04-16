@@ -54,7 +54,6 @@ def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode, to_print = "Fa
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	na_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Na" ]
-
 	au_positions = system.positions[ au_indices ]
 	na_positions = system.positions[ na_indices ]
 	na_bonding_threshold = 2.65

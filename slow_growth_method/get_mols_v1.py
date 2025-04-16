@@ -42,7 +42,6 @@ def get_H2O_within_surface_threshold( poscar, H2O_mols, distance_threshold = 2.6
 	results = sorted( results, key=lambda x: x[ "Distance" ] )
 	df = pd.DataFrame( results )
 	print( df )
-
 	return [ list( map( int, h2o.strip( "[]" ).split(", ") ) ) for h2o in df[ "H2O" ] ]
 
 

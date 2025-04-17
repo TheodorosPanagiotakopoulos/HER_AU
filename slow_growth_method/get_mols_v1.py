@@ -57,7 +57,6 @@ def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode, to_print = "Fa
 	au_positions = system.positions[ au_indices ]
 	na_positions = system.positions[ na_indices ]
 	na_bonding_threshold = 2.65
-
 	closest_H2O = None
 	min_distance = float( "inf" )
 

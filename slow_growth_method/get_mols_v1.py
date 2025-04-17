@@ -64,7 +64,7 @@ def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode, to_print = "Fa
 		H2O_positions = system.positions[ [ h1_idx, o_idx, h2_idx ] ]
 		distances_to_na = cdist( H2O_positions, na_positions )
 		if np.any( distances_to_na < na_bonding_threshold ):
-			continue 
+			continue
 
 		distances = cdist( H2O_positions, au_positions )
 		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )

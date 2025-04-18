@@ -37,7 +37,6 @@ def get_OUTCAR_NELECT():
             lines = file.readlines()
         nelect_lines = [line.decode('utf-8', errors='ignore').strip() for line in lines if b"NELECTCURRENT" in line]
         last_line = nelect_lines[ - 1 ].strip()
-        #print( last_line )
         if nelect_lines:
             match =  re.search( r'NELECTCURRENT\s+([\d.-]+)', last_line )
             #print( "NELECTCURRENT = ", match.group( 1 )  )

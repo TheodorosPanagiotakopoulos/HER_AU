@@ -31,7 +31,6 @@ def make_dirs_and_copy():
 
 def get_OUTCAR_NELECT():
     files = [ i for i in glob.glob( "*" ) if os.path.isfile( i ) ]
-    #print( files )
     if "OUTCAR" in files:
         print( "OUTCAR found" )
         with open( "OUTCAR", "rb" ) as file:

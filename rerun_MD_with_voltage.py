@@ -39,7 +39,6 @@ def get_OUTCAR_NELECT():
         last_line = nelect_lines[ - 1 ].strip()
         if nelect_lines:
             match =  re.search( r'NELECTCURRENT\s+([\d.-]+)', last_line )
-            #print( "NELECTCURRENT = ", match.group( 1 )  )
             return  float( match.group( 1 ) )
         else:
             print( "NELECT not found yet" )

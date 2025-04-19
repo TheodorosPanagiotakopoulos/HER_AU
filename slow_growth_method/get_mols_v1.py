@@ -68,7 +68,6 @@ def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode, to_print = "Fa
 		distances = cdist( H2O_positions, au_positions )
 		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )
 		distance = distances[ min_distance_idx ]
-
 		if distance < min_distance:
 			min_distance = distance
 			h2_idx_closest = [ h1_idx, o_idx, h2_idx ][ min_distance_idx[ 0 ] ]

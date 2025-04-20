@@ -92,7 +92,6 @@ def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electro
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[ [ h1_idx, o_idx, h2_idx ] ]
-
 		is_attached_to_Na = any( np.linalg.norm(system.positions[ o_idx ] - system.positions[ na_idx ] ) < distance_threshold for na_idx in na_indices )
 		if not is_attached_to_Na:
 			continue

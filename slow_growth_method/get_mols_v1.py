@@ -97,7 +97,6 @@ def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electro
 			continue
 		distances_h1 = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
 		distances_h2 = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
-
 		min_h1_distance = np.min( distances_h1 )
 		min_h2_distance = np.min( distances_h2 )
 

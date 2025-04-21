@@ -91,7 +91,6 @@ def get_data_ICONST( path_to_SG_simulation, verbose = False ):
 		raise ValueError( "ICONST file must contain at least two lines." )
 	elif len(lines) > 3:
 		raise ValueError( "ICONST file must NOT contain more than three lines." )
-
 	first_line = lines[ 0 ].split()
 	O_idx = int( first_line[ 1 ] ) - 1  
 	H_idx = int( first_line[ 2 ] ) - 1  

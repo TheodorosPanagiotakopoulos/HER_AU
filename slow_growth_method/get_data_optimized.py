@@ -57,7 +57,6 @@ def get_max_frame_number():
 		if match:
 			frame_num = int(match.group(1))
 			max_n = max(max_n, frame_num)
-
 	return max_n if max_n != -1 else None
 
 # Extracts the "H" index from the first line of an ICONST file.

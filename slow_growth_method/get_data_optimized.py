@@ -87,7 +87,6 @@ def get_data_ICONST( path_to_SG_simulation, verbose = False ):
 	iconst_path = os.path.join( path_to_SG_simulation, "ICONST" )
 	with open( iconst_path ) as file:
 		lines = [ line.rstrip() for line in file ]
-
 	if len( lines ) < 2:
 		raise ValueError( "ICONST file must contain at least two lines." )
 	elif len(lines) > 3:

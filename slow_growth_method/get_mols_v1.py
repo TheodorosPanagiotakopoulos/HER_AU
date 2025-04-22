@@ -107,7 +107,6 @@ def get_H2O_near_electrode_from_Na_hydration_shell( poscar, H2O_close_to_electro
 			closest_H_idx = h2_idx
 			min_distance = min_h2_distance
 			closest_Au_idx = au_indices[ np.argmin(distances_h2 ) ]
-
 		if min_distance < distance_threshold:
 			results.append( [ [o_idx, h1_idx, h2_idx], f"O: {o_idx}", f"H: {closest_H_idx}", f"Au_closest_to_H_idx: {closest_Au_idx}", f"distance: {round(min_distance, 3)}" ] )
 	results.sort(key = lambda x: float( x[ -1 ].split( ': ')[ 1 ] ) )

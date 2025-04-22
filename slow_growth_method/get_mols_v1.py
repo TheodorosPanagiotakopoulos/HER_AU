@@ -123,7 +123,6 @@ def get_H2O_near_electrode_NOT_from_Na_hydration_shell( poscar, H2O_close_to_ele
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	na_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Na" ]
 	au_positions = system.positions[ au_indices ]
-
 	results = list()
 
 	for h2o in H2O_close_to_electrode:

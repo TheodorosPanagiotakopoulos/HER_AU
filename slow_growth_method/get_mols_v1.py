@@ -159,7 +159,6 @@ def get_NH4_mols( poscar, threshold = 1.2, to_print = "False" ):
 	system = read( poscar )
 	nitrogen_indices = [i for i, j in enumerate( system ) if j.symbol == "N" ]
 	hydrogen_indices = [i for i, j in enumerate( system ) if j.symbol == "H" ]
-
 	NH4_mols = list()
 	for i in nitrogen_indices:
 		distances = system.get_distances( i , hydrogen_indices, mic = True )

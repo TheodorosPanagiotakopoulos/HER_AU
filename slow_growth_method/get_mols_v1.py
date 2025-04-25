@@ -177,7 +177,6 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 	au_positions = system.positions[ au_indices ]
 	NH4_close_to_electrode = list()
 	results = list()
-
 	for mol in NH4_mols:
 		N_idx, H1_N, H2_N, H3_N, H4_N = mol
 

@@ -196,7 +196,6 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 				closest_Au_idx
 			))
 			NH4_close_to_electrode.append( mol )
-
 	results.sort( key = lambda x: x[0] )
 	if to_print == "True":
 		for distance, mol, closest_H_idx, closest_Au_idx in results:

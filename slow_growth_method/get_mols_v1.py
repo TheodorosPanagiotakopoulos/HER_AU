@@ -181,7 +181,6 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 		N_idx, H1_N, H2_N, H3_N, H4_N = mol
 		NH4_H_indices = [ H1_N, H2_N, H3_N, H4_N ]
 		NH4_H_positions = system.positions[ NH4_H_indices ]
-
 		distances_to_Au = cdist( NH4_H_positions, au_positions )
 		min_dist_idx = np.argmin( distances_to_Au )
 		min_distance = distances_to_Au.flatten()[ min_dist_idx ]

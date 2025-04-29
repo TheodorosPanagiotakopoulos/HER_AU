@@ -187,7 +187,6 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 		if min_distance < distance_threshold:
 			closest_H_idx = NH4_H_indices[ min_dist_idx // len( au_indices ) ]
 			closest_Au_idx = au_indices[ min_dist_idx % len( au_indices ) ]
-
 			results.append((
 				min_distance,
 				[ N_idx, H1_N, H2_N, H3_N, H4_N ],

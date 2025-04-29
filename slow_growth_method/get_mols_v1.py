@@ -207,7 +207,6 @@ def get_NH4_within_surface_threshold( poscar, NH4_mols, distance_threshold = 5.6
 def get_NH4_closest_to_electrode( poscar, NH4_mols, to_print = "False" ):
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
-
 	au_positions = system.positions[ au_indices ]
 	closest_NH4 = None
 	min_distance = float( "inf" )

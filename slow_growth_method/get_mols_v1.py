@@ -213,7 +213,6 @@ def get_NH4_closest_to_electrode( poscar, NH4_mols, to_print = "False" ):
 	for nh4 in NH4_mols:
 		n_idx, h1_idx, h2_idx, h3_idx, h4_idx = nh4
 		NH4_positions = system.positions[ [n_idx, h1_idx, h2_idx, h3_idx, h4_idx] ]
-
 		H_positions = NH4_positions[ 1: ]
 		distances = cdist( H_positions, au_positions )
 		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )

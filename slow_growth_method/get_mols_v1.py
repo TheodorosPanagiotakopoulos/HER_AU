@@ -210,7 +210,6 @@ def get_NH4_closest_to_electrode( poscar, NH4_mols, to_print = "False" ):
 	au_positions = system.positions[ au_indices ]
 	closest_NH4 = None
 	min_distance = float( "inf" )
-
 	for nh4 in NH4_mols:
 		n_idx, h1_idx, h2_idx, h3_idx, h4_idx = nh4
 		NH4_positions = system.positions[ [n_idx, h1_idx, h2_idx, h3_idx, h4_idx] ]

@@ -232,7 +232,6 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
-
 	final_results = list()
 
 	for nh4 in NH4_molecules:

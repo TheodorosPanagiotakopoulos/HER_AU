@@ -239,7 +239,6 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 		molecule_results = list()
 		for h2o in H2O_mols:
 			h1_idx, o_idx, h2_idx = h2o
-
 			closest_nh4_h_to_h2o = None
 			min_distance_to_nh4_h = float( 'inf' )
 			for h_nh4_idx in NH4_H_indices:

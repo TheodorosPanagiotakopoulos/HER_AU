@@ -237,7 +237,6 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 		n_idx, h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx = nh4
 		NH4_H_indices = [ h1_nh4_idx, h2_nh4_idx, h3_nh4_idx, h4_nh4_idx ]
 		molecule_results = list()
-
 		for h2o in H2O_mols:
 			h1_idx, o_idx, h2_idx = h2o
 

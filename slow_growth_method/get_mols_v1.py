@@ -246,7 +246,6 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 				if distance < distance_threshold and distance < min_distance_to_nh4_h:
 					closest_nh4_h_to_h2o = h_nh4_idx
 					min_distance_to_nh4_h = distance
-
 			if closest_nh4_h_to_h2o is None:
 				continue
 

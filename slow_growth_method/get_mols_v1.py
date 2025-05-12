@@ -283,7 +283,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 	system = read( poscar )
 	Au_indices = [ i for i, atom in enumerate( system ) if atom.symbol == "Au" ]
 	results = list()
-
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
 		O_position = system.positions[ o_idx ]

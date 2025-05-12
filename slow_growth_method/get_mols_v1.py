@@ -248,7 +248,6 @@ def get_NH4_hydration_shell( poscar, H2O_mols, NH4_molecules, distance_threshold
 					min_distance_to_nh4_h = distance
 			if closest_nh4_h_to_h2o is None:
 				continue
-
 			distances_h1_to_au = cdist( [ system.positions[ h1_idx ] ], au_positions ).flatten()
 			distances_h2_to_au = cdist( [ system.positions[ h2_idx ] ], au_positions ).flatten()
 

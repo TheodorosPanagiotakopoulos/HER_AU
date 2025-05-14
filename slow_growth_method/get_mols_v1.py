@@ -150,7 +150,6 @@ def get_H2O_near_electrode_NOT_from_Na_hydration_shell( poscar, H2O_close_to_ele
 			print( i )
 	return results
 
-
 ################################## NH4 molecules ##################################
 
 #NH4 molecules in the system

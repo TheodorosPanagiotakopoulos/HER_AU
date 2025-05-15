@@ -294,7 +294,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 			N_idx = next( i for i in nh4 if system[ i ].symbol == "N" )
 			NH4_H_indices = [ i for i in nh4 if system[ i ].symbol == "H" ]
 			distance_O_to_N = np.linalg.norm( O_position - system.positions[ N_idx ] )
-
 			if distance_O_to_N < max_distance_O_to_H_of_NH4:
 				NH4_H_positions = system.positions[ NH4_H_indices ]
 

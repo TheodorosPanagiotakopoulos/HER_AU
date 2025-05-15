@@ -290,7 +290,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 		min_H2O_Au_dist = distances_to_Au[ min_H2O_Au_dist_idx ]
 		H_idx_of_H2O_closest_to_th_electrode = h1_idx if min_H2O_Au_dist_idx[ 0 ] == 0 else h2_idx
 		closest_Au_idx = Au_indices[ min_H2O_Au_dist_idx[ 1 ] ]
-
 		for nh4 in NH4_mols:
 			N_idx = next( i for i in nh4 if system[ i ].symbol == "N" )
 			NH4_H_indices = [ i for i in nh4 if system[ i ].symbol == "H" ]

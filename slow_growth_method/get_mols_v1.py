@@ -296,7 +296,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 			distance_O_to_N = np.linalg.norm( O_position - system.positions[ N_idx ] )
 			if distance_O_to_N < max_distance_O_to_H_of_NH4:
 				NH4_H_positions = system.positions[ NH4_H_indices ]
-
 				distances_to_O = cdist( [ O_position ], NH4_H_positions )
 				min_distance_idx = np.unravel_index( np.argmin( distances_to_O ), distances_to_O.shape )
 				min_distance = distances_to_O[ min_distance_idx ]

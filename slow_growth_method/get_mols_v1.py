@@ -327,7 +327,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold = 2.5, to_print = "False" ):
 	system = read( poscar )
 	results = []
-
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]

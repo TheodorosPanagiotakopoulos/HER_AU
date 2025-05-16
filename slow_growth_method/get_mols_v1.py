@@ -315,7 +315,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 							"distance_to_O": round(min_distance, 3)
 						}
 					})
-
 	results.sort( key = lambda x: x[ "NH4_closest" ][ "distance_to_O" ] )
 	if to_print == "True":
 		for result in results:

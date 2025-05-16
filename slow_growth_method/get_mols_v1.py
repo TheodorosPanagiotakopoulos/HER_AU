@@ -300,7 +300,6 @@ def get_H2O_close_to_surface_and_NH4( poscar, NH4_mols, max_distance_to_Au = 4.5
 				min_distance_idx = np.unravel_index( np.argmin( distances_to_O ), distances_to_O.shape )
 				min_distance = distances_to_O[ min_distance_idx ]
 				H_of_NH4_idx_closest_to_O_of_H2O = NH4_H_indices[ min_distance_idx[ 1 ] ]
-
 				if min_distance < max_distance_to_Au:
 					results.append({
 						"H2O": [o_idx, h1_idx, h2_idx],

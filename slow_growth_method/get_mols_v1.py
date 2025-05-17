@@ -334,7 +334,6 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold = 
 			distances = cdist(H2O_positions, nh4_positions)
 			min_distance_idx = np.unravel_index(np.argmin(distances), distances.shape)
 			min_distance = distances[min_distance_idx]
-
 			if min_distance < threshold:
 				h2o_atoms = [system.symbols[idx] for idx in [h1_idx, o_idx, h2_idx]]
 				nh4_atoms = [system.symbols[idx] for idx in nh4]

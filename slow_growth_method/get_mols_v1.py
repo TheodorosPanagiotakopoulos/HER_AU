@@ -340,7 +340,6 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold = 
 			if min_distance < threshold:
 				h2o_atoms = [system.symbols[idx] for idx in [h1_idx, o_idx, h2_idx]]
 				nh4_atoms = [system.symbols[idx] for idx in nh4]
-
 				h2o_atom_idx = min_distance_idx[0]
 				nh4_atom_idx = min_distance_idx[1]
 				h2o_symbol = h2o_atoms[h2o_atom_idx]

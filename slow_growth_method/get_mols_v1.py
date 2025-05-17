@@ -77,7 +77,6 @@ def get_closest_H2O_to_electrode( poscar, H2O_close_to_electrode, to_print = "Fa
 		print( closest_H2O )
 	return closest_H2O
 
-
 ################################## Na molecules ##################################
 
 #H2O molecules that are close to electrode and belong to Na hydration shell

@@ -329,7 +329,6 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold = 
 	for h2o in H2O_close_to_electrode:
 		h1_idx, o_idx, h2_idx = h2o
 		H2O_positions = system.positions[[h1_idx, o_idx, h2_idx]]
-
 		for nh4 in NH4_mols:
 			nh4_positions = system.positions[nh4]
 			distances = cdist(H2O_positions, nh4_positions)

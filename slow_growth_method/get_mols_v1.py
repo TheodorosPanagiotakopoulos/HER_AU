@@ -344,7 +344,6 @@ def get_H2O_close_to_NH4( psocar, H2O_close_to_electrode, NH4_mols, threshold = 
 				h2o_idx = [h1_idx, o_idx, h2_idx][h2o_atom_idx]
 				nh4_idx = nh4[nh4_atom_idx]
 				description = f"symbol {h2o_symbol} = {h2o_idx} - symbol {nh4_symbol} = {nh4_idx}"
-
 				results.append( ( [ h1_idx, o_idx, h2_idx ], nh4, description, round( min_distance, 3 ) ) )
 				break
 	results.sort( key = lambda x: x[ 3 ] )

@@ -408,7 +408,6 @@ def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold
 				closest_Au_idx
 			))
 			CH3NH3_close_to_electrode.append( mol )
-
 	results.sort(key = lambda x: x[ 0 ] )
 	if to_print == "True":
 		for distance, mol, closest_H_idx, closest_Au_idx in results:

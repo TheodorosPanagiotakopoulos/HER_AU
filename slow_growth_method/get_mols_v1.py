@@ -385,7 +385,6 @@ def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold
 	au_positions = system.positions[ au_indices ]
 	CH3NH3_close_to_electrode = list()
 	results = list()
-
 	for mol in CH3NH3_mols:
 		N_idx, H1_N, H2_N, H3_N, C_idx, H1_C, H2_C, H3_C = mol
 		

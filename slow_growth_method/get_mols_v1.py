@@ -433,7 +433,6 @@ def get_CH3NH3_closest_to_electrode( poscar, CH3NH3_mols, to_print = "False" ):
 		distances = cdist( H_positions, au_positions )
 		min_distance_idx = np.unravel_index( np.argmin( distances ), distances.shape )
 		distance = distances[ min_distance_idx ]
-
 		if distance < min_distance:
 			min_distance = distance
 			closest_h_idx_of_NH3_group = [ h1_idx, h2_idx, h3_idx ][ min_distance_idx[ 0 ] ]

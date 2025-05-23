@@ -383,7 +383,6 @@ def get_CH3NH3_within_surface_threshold( poscar, CH3NH3_mols, distance_threshold
 	system = read( poscar )
 	au_indices = [ i for i, atom in enumerate(system) if atom.symbol == "Au" ]
 	au_positions = system.positions[ au_indices ]
-
 	CH3NH3_close_to_electrode = list()
 	results = list()
 
